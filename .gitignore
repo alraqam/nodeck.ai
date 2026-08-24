@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.env
+
+# Node / Next
+node_modules/
+.next/
+out/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# The frontend/ directory has its own git repository (frontend/.git).
+# It is versioned there, not here, to preserve its existing history.
+/frontend/
