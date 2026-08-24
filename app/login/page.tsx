@@ -9,12 +9,13 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
+import { AuthShell, FieldError } from "@/components/auth-shell"
 import { api, ApiError, setToken } from "@/lib/api"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
+    email: z.string().email("Enter a valid email address"),
     password: z.string().min(1, "Password is required"),
 })
 
@@ -45,40 +46,46 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-            <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Login</CardTitle>
-                    <CardDescription>
-                        Enter your email below to login to your account.
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <CardContent className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="m@example.com" {...register("email")} />
-                            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" {...register("password")} />
-                            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button className="w-full" disabled={isLoading}>
-                            {isLoading ? "Signing in..." : "Sign in"}
-                        </Button>
-                        <div className="text-center text-sm">
-                            Don&apos;t have an account?{" "}
-                            <Link href="/register" className="underline">
-                                Sign up
-                            </Link>
-                        </div>
-                    </CardFooter>
-                </form>
-            </Card>
-        </div>
+        <AuthShell
+            eyebrow="Sign in"
+            title="Welcome back"
+            subtitle="Pick up where your profile left off."
+            footer={
+                <>
+                    No account yet?{" "}
+                    <Link href="/register" className="text-foreground underline underline-offset-4">
+                        Create one
+                    </Link>
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        {...register("email")}
+                    />
+                    <FieldError message={errors.email?.message} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                        id="password"
+                        type="password"
+                        autoComplete="current-password"
+                        {...register("password")}
+                    />
+                    <FieldError message={errors.password?.message} />
+                </div>
+                <Button className="mt-2 w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign in
+                </Button>
+            </form>
+        </AuthShell>
     )
 }

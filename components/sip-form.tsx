@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { SIP } from "@/lib/types"
 import { Loader2, Plus, Trash2 } from "lucide-react"
@@ -256,7 +256,7 @@ export function SipForm({
     return (
         <form onSubmit={handleSubmit(submit)}>
             <Tabs defaultValue="identity" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+                <TabsList className="w-full">
                     {TABS.map((t) => (
                         <TabsTrigger key={t.value} value={t.value}>
                             {t.label}
@@ -266,8 +266,8 @@ export function SipForm({
 
                 <Panel value="identity">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Identity</CardTitle>
+                        <CardHeader className="gap-2">
+                            <span className="eyebrow">Identity</span>
                             <CardDescription>Where and when the company exists.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -289,8 +289,8 @@ export function SipForm({
 
                 <Panel value="problem">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>The Problem</CardTitle>
+                        <CardHeader className="gap-2">
+                            <span className="eyebrow">The Problem</span>
                             <CardDescription>What hurts, for whom, and how badly.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4">
@@ -317,8 +317,8 @@ export function SipForm({
 
                 <Panel value="solution">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>The Solution</CardTitle>
+                        <CardHeader className="gap-2">
+                            <span className="eyebrow">The Solution</span>
                             <CardDescription>What you built and why it is hard to copy.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4">
@@ -343,8 +343,8 @@ export function SipForm({
 
                 <Panel value="market">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Market</CardTitle>
+                        <CardHeader className="gap-2">
+                            <span className="eyebrow">Market</span>
                             <CardDescription>Figures in USD.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -372,10 +372,10 @@ export function SipForm({
                 <Panel value="traction">
                     <div className="grid gap-6">
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Traction</CardTitle>
-                                <CardDescription>Numbers first. Vague is a red flag.</CardDescription>
-                            </CardHeader>
+                            <CardHeader className="gap-2">
+                            <span className="eyebrow">Traction</span>
+                            <CardDescription>Numbers first. Vague is a red flag.</CardDescription>
+                        </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label>Metrics</Label>
@@ -420,10 +420,10 @@ export function SipForm({
                         </Card>
 
                         <Card>
-                            <CardHeader>
-                                <CardTitle>Team</CardTitle>
-                                <CardDescription>Founder-market fit, not resumes.</CardDescription>
-                            </CardHeader>
+                            <CardHeader className="gap-2">
+                            <span className="eyebrow">Team</span>
+                            <CardDescription>Founder-market fit, not resumes.</CardDescription>
+                        </CardHeader>
                             <CardContent className="grid gap-6">
                                 {team.fields.map((f, i) => (
                                     <div key={f.id} className="grid gap-4 rounded-md border p-4">
@@ -475,8 +475,8 @@ export function SipForm({
 
                 <Panel value="fundraising">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Fundraising</CardTitle>
+                        <CardHeader className="gap-2">
+                            <span className="eyebrow">Fundraising</span>
                             <CardDescription>The ask and the deal.</CardDescription>
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -499,10 +499,13 @@ export function SipForm({
                 </Panel>
             </Tabs>
 
-            <div className="mt-6 flex justify-end">
+            <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-4 border-t bg-background/85 py-4 backdrop-blur-sm">
+                <p className="text-xs text-muted-foreground">
+                    Saving stores every section, whichever tab you are on.
+                </p>
                 <Button type="submit" disabled={saving}>
                     {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Intelligence Profile
+                    Save profile
                 </Button>
             </div>
         </form>

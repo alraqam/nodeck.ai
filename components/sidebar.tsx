@@ -3,12 +3,14 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { clearToken } from "@/lib/api"
-import { LayoutDashboard, LogOut, PlusCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { LayoutGrid, LogOut, Plus } from "lucide-react"
 
 const links = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-    { href: "/dashboard/startups/new", label: "New Profile", icon: PlusCircle, exact: false },
+    { href: "/dashboard", label: "Overview", icon: LayoutGrid, exact: true },
+    { href: "/dashboard/startups/new", label: "New profile", icon: Plus, exact: false },
 ]
 
 export function Sidebar() {
@@ -21,39 +23,49 @@ export function Sidebar() {
     }
 
     return (
-        <div className="flex h-full min-h-screen w-64 flex-col border-r bg-muted/20 px-4 py-8">
-            <Link href="/dashboard" className="mb-8 px-2 text-xl font-bold tracking-tight">
-                NoDeck
-            </Link>
-            <nav className="flex flex-1 flex-col space-y-2">
+        <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r bg-card/40">
+            <div className="flex h-14 items-center justify-between border-b px-4">
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    <span className="h-4 w-1 rounded-full bg-primary" />
+                    <span className="text-sm font-semibold tracking-tight">NoDeck</span>
+                </Link>
+                <ThemeToggle className="h-7 w-7 text-muted-foreground" />
+            </div>
+
+            <nav className="flex flex-1 flex-col gap-0.5 p-2">
                 {links.map((link) => {
                     const Icon = link.icon
                     const active = link.exact
                         ? pathname === link.href
                         : pathname.startsWith(link.href)
                     return (
-                        <Link key={link.href} href={link.href}>
-                            <Button
-                                variant={active ? "secondary" : "ghost"}
-                                className="w-full justify-start gap-2"
-                            >
-                                <Icon className="h-4 w-4" />
-                                {link.label}
-                            </Button>
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={cn(
+                                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                                active
+                                    ? "bg-secondary font-medium text-secondary-foreground"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                            )}
+                        >
+                            <Icon className="h-4 w-4" />
+                            {link.label}
                         </Link>
                     )
                 })}
             </nav>
-            <div className="mt-auto">
+
+            <div className="border-t p-2">
                 <Button
                     variant="ghost"
                     onClick={logout}
-                    className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                    className="w-full justify-start gap-2.5 px-2.5 text-muted-foreground hover:text-foreground"
                 >
                     <LogOut className="h-4 w-4" />
-                    Logout
+                    Log out
                 </Button>
             </div>
-        </div>
+        </aside>
     )
 }

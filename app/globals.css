@@ -2,60 +2,93 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Design tokens. Each value is a COMPLETE color, not a bare HSL triplet:
-   Tailwind v4 uses these directly, so `bg-primary/90` and friends only work
-   if the token already resolves to a real color. */
+/* ---------------------------------------------------------------------------
+   NoDeck design tokens.
+
+   Direction: an analyst's instrument, not a SaaS dashboard. Near-monochrome
+   canvas, hairline rules rather than shadows, tight radii, mono tabular
+   numerals for data. Colour is rationed on purpose: ONE accent for
+   interaction, and the red/amber/emerald ramp is reserved exclusively for
+   scores - so the only thing that lights up on a page is the verdict.
+
+   Every value is a complete color, never a bare HSL triplet: Tailwind v4 uses
+   these directly, so `bg-primary/90` only works if the token already resolves.
+--------------------------------------------------------------------------- */
+
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222.2 84% 4.9%);
+  --background: hsl(210 20% 99%);
+  --foreground: hsl(215 30% 9%);
+
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222.2 84% 4.9%);
+  --card-foreground: hsl(215 30% 9%);
+
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222.2 84% 4.9%);
-  --primary: hsl(221.2 83.2% 53.3%);
-  --primary-foreground: hsl(210 40% 98%);
-  --secondary: hsl(210 40% 96.1%);
-  --secondary-foreground: hsl(222.2 47.4% 11.2%);
-  --muted: hsl(210 40% 96.1%);
-  --muted-foreground: hsl(215.4 16.3% 46.9%);
-  --accent: hsl(210 40% 96.1%);
-  --accent-foreground: hsl(222.2 47.4% 11.2%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(210 40% 98%);
-  --success: hsl(142.1 70.6% 35.3%);
-  --warning: hsl(38 92% 45%);
-  --border: hsl(214.3 31.8% 91.4%);
-  --input: hsl(214.3 31.8% 91.4%);
-  --ring: hsl(221.2 83.2% 53.3%);
-  --radius: 0.5rem;
+  --popover-foreground: hsl(215 30% 9%);
+
+  --primary: hsl(250 72% 54%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  --secondary: hsl(214 22% 95%);
+  --secondary-foreground: hsl(215 30% 12%);
+
+  --muted: hsl(214 22% 95%);
+  --muted-foreground: hsl(215 14% 44%);
+
+  --accent: hsl(214 22% 95%);
+  --accent-foreground: hsl(215 30% 12%);
+
+  --destructive: hsl(0 72% 46%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Score ramp. Deliberately outside the accent family so a score can never be
+     confused with a button. */
+  --score-low: hsl(0 70% 47%);
+  --score-mid: hsl(32 90% 40%);
+  --score-high: hsl(158 72% 30%);
+
+  --border: hsl(214 20% 89%);
+  --input: hsl(214 20% 86%);
+  --ring: hsl(250 72% 54%);
+
+  --radius: 0.25rem;
 }
 
 .dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-  --card: hsl(222.2 84% 4.9%);
-  --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222.2 84% 4.9%);
-  --popover-foreground: hsl(210 40% 98%);
-  --primary: hsl(217.2 91.2% 59.8%);
-  --primary-foreground: hsl(222.2 47.4% 11.2%);
-  --secondary: hsl(217.2 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
-  --muted: hsl(217.2 32.6% 17.5%);
-  --muted-foreground: hsl(215 20.2% 65.1%);
-  --accent: hsl(217.2 32.6% 17.5%);
-  --accent-foreground: hsl(210 40% 98%);
-  --destructive: hsl(0 62.8% 40.6%);
-  --destructive-foreground: hsl(210 40% 98%);
-  --success: hsl(142.1 70.6% 45.3%);
-  --warning: hsl(38 92% 55%);
-  --border: hsl(217.2 32.6% 17.5%);
-  --input: hsl(217.2 32.6% 17.5%);
-  --ring: hsl(224.3 76.3% 48%);
+  --background: hsl(222 24% 7%);
+  --foreground: hsl(210 18% 95%);
+
+  --card: hsl(222 22% 10%);
+  --card-foreground: hsl(210 18% 95%);
+
+  --popover: hsl(222 22% 11%);
+  --popover-foreground: hsl(210 18% 95%);
+
+  --primary: hsl(252 88% 70%);
+  --primary-foreground: hsl(222 30% 8%);
+
+  --secondary: hsl(222 18% 16%);
+  --secondary-foreground: hsl(210 18% 95%);
+
+  --muted: hsl(222 18% 15%);
+  --muted-foreground: hsl(215 14% 60%);
+
+  --accent: hsl(222 18% 16%);
+  --accent-foreground: hsl(210 18% 95%);
+
+  --destructive: hsl(0 74% 62%);
+  --destructive-foreground: hsl(222 30% 8%);
+
+  --score-low: hsl(0 76% 65%);
+  --score-mid: hsl(38 95% 60%);
+  --score-high: hsl(157 66% 50%);
+
+  --border: hsl(222 16% 19%);
+  --input: hsl(222 16% 22%);
+  --ring: hsl(252 88% 70%);
 }
 
 /* `@theme inline` rather than plain `@theme`: values in a plain @theme block
-   are static and the .dark class above could not override them. */
+   are static, and the .dark class above could not override them. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -73,23 +106,24 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
+  --color-score-low: var(--score-low);
+  --color-score-mid: var(--score-mid);
+  --color-score-high: var(--score-high);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 @layer base {
-  /* Tailwind v4 changed the default border color to currentColor. Every Card
-     uses a bare `border` class, so without this they would render with
-     text-coloured borders. */
+  /* Tailwind v4 defaults border-color to currentColor; every card uses a bare
+     `border`, so without this they render with text-coloured edges. */
   *,
   ::after,
   ::before,
@@ -101,5 +135,48 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Headings are the one place we buy tension: tight tracking. */
+  h1, h2, h3 {
+    letter-spacing: -0.021em;
+  }
+
+  /* Numbers must not jitter while a report polls. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Number spinners are noise in a data form. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* Small-caps section label. The most identity-carrying element in the
+     system - it sits above every block of data. */
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  /* Faint graph-paper texture for hero surfaces. */
+  .grid-texture {
+    background-image:
+      linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }

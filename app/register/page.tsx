@@ -9,13 +9,15 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
+import { AuthShell, FieldError } from "@/components/auth-shell"
 import { api, ApiError } from "@/lib/api"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 const registerSchema = z.object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
+    email: z.string().email("Enter a valid email address"),
+    // Matches the backend's min_length=8.
     password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
@@ -51,45 +53,57 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-            <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Create an account</CardTitle>
-                    <CardDescription>
-                        Enter your information to get started.
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <CardContent className="grid gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="fullName">Full Name</Label>
-                            <Input id="fullName" placeholder="John Doe" {...register("fullName")} />
-                            {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="m@example.com" {...register("email")} />
-                            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" {...register("password")} />
-                            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button className="w-full" disabled={isLoading}>
-                            {isLoading ? "Creating account..." : "Create account"}
-                        </Button>
-                        <div className="text-center text-sm">
-                            Already have an account?{" "}
-                            <Link href="/login" className="underline">
-                                Sign in
-                            </Link>
-                        </div>
-                    </CardFooter>
-                </form>
-            </Card>
-        </div>
+        <AuthShell
+            eyebrow="Create account"
+            title="Get your score"
+            subtitle="Build the profile once. Score it as often as you like."
+            footer={
+                <>
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-foreground underline underline-offset-4">
+                        Sign in
+                    </Link>
+                </>
+            }
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="fullName">Full name</Label>
+                    <Input
+                        id="fullName"
+                        autoComplete="name"
+                        placeholder="Ada Lovelace"
+                        {...register("fullName")}
+                    />
+                    <FieldError message={errors.fullName?.message} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        {...register("email")}
+                    />
+                    <FieldError message={errors.email?.message} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                        id="password"
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="At least 8 characters"
+                        {...register("password")}
+                    />
+                    <FieldError message={errors.password?.message} />
+                </div>
+                <Button className="mt-2 w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Create account
+                </Button>
+            </form>
+        </AuthShell>
     )
 }

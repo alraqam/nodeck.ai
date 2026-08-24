@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { api, ApiError } from "@/lib/api"
 import type { StartupSummary } from "@/lib/types"
 import { toast } from "sonner"
-import { Loader2, Plus } from "lucide-react"
+import { ArrowRight, Plus } from "lucide-react"
 
 export default function DashboardPage() {
     const [startups, setStartups] = useState<StartupSummary[] | null>(null)
@@ -25,34 +26,48 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
-                    <p className="text-muted-foreground">Your startup intelligence profiles.</p>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+                <div className="min-w-0">
+                    <span className="eyebrow">Overview</span>
+                    <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+                        Intelligence profiles
+                    </h1>
                 </div>
                 <Link href="/dashboard/startups/new">
                     <Button>
-                        <Plus className="mr-2 h-4 w-4" /> New Profile
+                        <Plus className="mr-2 h-4 w-4" /> New profile
                     </Button>
                 </Link>
             </div>
 
             {startups === null && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {[0, 1, 2].map((i) => (
+                        <Card key={i}>
+                            <CardContent className="space-y-3 p-5">
+                                <Skeleton className="h-4 w-32" />
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-20" />
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             )}
 
             {startups?.length === 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>No profiles yet</CardTitle>
-                        <CardDescription>
-                            A profile replaces your deck. Create one, fill in the Intelligence
-                            Profile, then run a fundability analysis.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
+                <Card className="relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 grid-texture opacity-[0.18]" />
+                    <CardContent className="relative flex flex-col items-start gap-5 p-10">
+                        <div className="max-w-md space-y-2">
+                            <h2 className="text-lg font-semibold tracking-tight">
+                                No profiles yet
+                            </h2>
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                                A profile replaces your deck. Create one, fill in the
+                                Intelligence Profile, then have a general partner score it out
+                                of 100.
+                            </p>
+                        </div>
                         <Link href="/dashboard/startups/new">
                             <Button>
                                 <Plus className="mr-2 h-4 w-4" /> Create your first profile
@@ -63,18 +78,27 @@ export default function DashboardPage() {
             )}
 
             {startups && startups.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {startups.map((s) => (
-                        <Link key={s.id} href={`/dashboard/startups/${s.id}`}>
-                            <Card className="h-full transition-colors hover:border-primary">
-                                <CardHeader>
-                                    <CardTitle>{s.name}</CardTitle>
-                                    <CardDescription>
+                        <Link key={s.id} href={`/dashboard/startups/${s.id}`} className="group">
+                            <Card className="h-full transition-colors group-hover:border-primary/50">
+                                <CardContent className="flex h-full flex-col gap-2 p-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <h3 className="min-w-0 truncate font-semibold tracking-tight">
+                                            {s.name}
+                                        </h3>
+                                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                                    </div>
+                                    <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                                         {s.one_liner || "No one-liner yet"}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="text-xs text-muted-foreground">
-                                    Created {new Date(s.created_at).toLocaleDateString()}
+                                    </p>
+                                    <p className="mt-auto pt-3 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted-foreground/60">
+                                        {new Date(s.created_at).toLocaleDateString(undefined, {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric",
+                                        })}
+                                    </p>
                                 </CardContent>
                             </Card>
                         </Link>

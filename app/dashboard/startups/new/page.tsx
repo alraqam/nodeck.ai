@@ -8,7 +8,7 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { api, ApiError } from "@/lib/api"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
@@ -49,19 +49,21 @@ export default function NewStartupPage() {
     }
 
     return (
-        <div className="mx-auto max-w-xl space-y-6">
+        <div className="mx-auto max-w-xl space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">New Profile</h1>
-                <p className="text-muted-foreground">Start with the basics.</p>
+                <span className="eyebrow">New profile</span>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+                    What are you building?
+                </h1>
+                <p className="mt-2 text-muted-foreground">
+                    Two fields now. The full Intelligence Profile comes next.
+                </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Company</CardTitle>
-                        <CardDescription>
-                            You will fill in the full Intelligence Profile next.
-                        </CardDescription>
+                        <span className="eyebrow">Company</span>
                     </CardHeader>
                     <CardContent className="grid gap-4">
                         <div className="grid gap-2">
