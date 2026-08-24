@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Logo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 /** Split layout: a quiet brand panel carrying the positioning, and the form.
@@ -23,8 +24,7 @@ export function AuthShell({
                 <div className="pointer-events-none absolute inset-0 grid-texture opacity-[0.15]" />
 
                 <Link href="/" className="relative flex items-center gap-2">
-                    <span className="h-4 w-1 rounded-full bg-primary" />
-                    <span className="text-sm font-semibold tracking-tight">NoDeck</span>
+                    <Logo />
                 </Link>
 
                 <div className="relative max-w-sm space-y-5">

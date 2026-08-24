@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Logo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const CRITERIA = [
@@ -15,8 +16,7 @@ export default function Home() {
         <div className="flex min-h-screen flex-col">
             <header className="flex h-14 items-center justify-between border-b px-6">
                 <div className="flex items-center gap-2">
-                    <span className="h-4 w-1 rounded-full bg-primary" />
-                    <span className="text-sm font-semibold tracking-tight">NoDeck</span>
+                    <Logo />
                 </div>
                 <div className="flex items-center gap-1">
                     <ThemeToggle className="text-muted-foreground" />

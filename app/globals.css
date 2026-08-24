@@ -5,86 +5,96 @@
 /* ---------------------------------------------------------------------------
    NoDeck design tokens.
 
-   Direction: an analyst's instrument, not a SaaS dashboard. Near-monochrome
-   canvas, hairline rules rather than shadows, tight radii, mono tabular
-   numerals for data. Colour is rationed on purpose: ONE accent for
-   interaction, and the red/amber/emerald ramp is reserved exclusively for
-   scores - so the only thing that lights up on a page is the verdict.
+   Palette is taken from the brand kit and the President AI Award deck, not
+   invented: amber #F5A524 on near-black #15161A / #0C0D10 with #FAFAF9 paper
+   and #9A9CA3 muted text. The same amber appears in the logo's node graph.
+
+   Two separate amber tokens on purpose:
+     --brand    fixed #F5A524, for the logo and brand fills. Never shifts.
+     --primary  theme-aware interaction colour. In light mode it deepens to
+                stay readable as text on white; brand amber only hits ~2.1:1
+                there, which fails contrast for anything but a filled block.
 
    Every value is a complete color, never a bare HSL triplet: Tailwind v4 uses
    these directly, so `bg-primary/90` only works if the token already resolves.
 --------------------------------------------------------------------------- */
 
 :root {
-  --background: hsl(210 20% 99%);
-  --foreground: hsl(215 30% 9%);
+  --background: #FAFAF9;
+  --foreground: #15161A;
 
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(215 30% 9%);
+  --card: #FFFFFF;
+  --card-foreground: #15161A;
 
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(215 30% 9%);
+  --popover: #FFFFFF;
+  --popover-foreground: #15161A;
 
-  --primary: hsl(250 72% 54%);
-  --primary-foreground: hsl(0 0% 100%);
+  /* Deepened amber: readable as text on paper. Filled buttons still carry the
+     true brand amber via --brand below. */
+  --primary: #96650B;
+  --primary-foreground: #FFFFFF;
 
-  --secondary: hsl(214 22% 95%);
-  --secondary-foreground: hsl(215 30% 12%);
+  --brand: #F5A524;
+  --brand-foreground: #15161A;
 
-  --muted: hsl(214 22% 95%);
-  --muted-foreground: hsl(215 14% 44%);
+  --secondary: #F1F1EF;
+  --secondary-foreground: #15161A;
 
-  --accent: hsl(214 22% 95%);
-  --accent-foreground: hsl(215 30% 12%);
+  --muted: #F1F1EF;
+  --muted-foreground: #6B7280;
 
-  --destructive: hsl(0 72% 46%);
-  --destructive-foreground: hsl(0 0% 100%);
+  --accent: #F1F1EF;
+  --accent-foreground: #15161A;
 
-  /* Score ramp. Deliberately outside the accent family so a score can never be
-     confused with a button. */
-  --score-low: hsl(0 70% 47%);
-  --score-mid: hsl(32 90% 40%);
-  --score-high: hsl(158 72% 30%);
+  --destructive: #C0392B;
+  --destructive-foreground: #FFFFFF;
 
-  --border: hsl(214 20% 89%);
-  --input: hsl(214 20% 86%);
-  --ring: hsl(250 72% 54%);
+  --score-low: #B3261E;
+  --score-mid: #96650B;
+  --score-high: #14724F;
+
+  --border: #E4E4E1;
+  --input: #D8D8D4;
+  --ring: #F5A524;
 
   --radius: 0.25rem;
 }
 
 .dark {
-  --background: hsl(222 24% 7%);
-  --foreground: hsl(210 18% 95%);
+  --background: #0C0D10;
+  --foreground: #FAFAF9;
 
-  --card: hsl(222 22% 10%);
-  --card-foreground: hsl(210 18% 95%);
+  --card: #15161A;
+  --card-foreground: #FAFAF9;
 
-  --popover: hsl(222 22% 11%);
-  --popover-foreground: hsl(210 18% 95%);
+  --popover: #17181D;
+  --popover-foreground: #FAFAF9;
 
-  --primary: hsl(252 88% 70%);
-  --primary-foreground: hsl(222 30% 8%);
+  --primary: #F5A524;
+  --primary-foreground: #15161A;
 
-  --secondary: hsl(222 18% 16%);
-  --secondary-foreground: hsl(210 18% 95%);
+  --brand: #F5A524;
+  --brand-foreground: #15161A;
 
-  --muted: hsl(222 18% 15%);
-  --muted-foreground: hsl(215 14% 60%);
+  --secondary: #212228;
+  --secondary-foreground: #FAFAF9;
 
-  --accent: hsl(222 18% 16%);
-  --accent-foreground: hsl(210 18% 95%);
+  --muted: #1C1D22;
+  --muted-foreground: #9A9CA3;
 
-  --destructive: hsl(0 74% 62%);
-  --destructive-foreground: hsl(222 30% 8%);
+  --accent: #212228;
+  --accent-foreground: #FAFAF9;
 
-  --score-low: hsl(0 76% 65%);
-  --score-mid: hsl(38 95% 60%);
-  --score-high: hsl(157 66% 50%);
+  --destructive: #F0655E;
+  --destructive-foreground: #15161A;
 
-  --border: hsl(222 16% 19%);
-  --input: hsl(222 16% 22%);
-  --ring: hsl(252 88% 70%);
+  --score-low: #F0655E;
+  --score-mid: #F5A524;
+  --score-high: #3DD68C;
+
+  --border: #2A2B31;
+  --input: #3A3B42;
+  --ring: #F5A524;
 }
 
 /* `@theme inline` rather than plain `@theme`: values in a plain @theme block
@@ -98,6 +108,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -117,7 +129,7 @@
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 

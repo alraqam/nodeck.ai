@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" width="900" height="240">
+
+  <g transform="translate(48,45) scale(0.58594)">
+  <rect x="58" y="104" width="150" height="98" rx="14" fill="#15161A" fill-opacity="0.28"/>
+  <rect x="48" y="86" width="164" height="104" rx="15" fill="#15161A" fill-opacity="0.55"/>
+  <rect x="38" y="62" width="180" height="112" rx="16" fill="#15161A"/>
+  <line x1="80" y1="140" x2="128" y2="94" stroke="#F5A524" stroke-width="5" stroke-opacity="0.6"/>
+  <line x1="128" y1="94" x2="176" y2="136" stroke="#F5A524" stroke-width="5" stroke-opacity="0.6"/>
+  <line x1="80" y1="140" x2="176" y2="136" stroke="#F5A524" stroke-width="5" stroke-opacity="0.35"/>
+  <circle cx="128" cy="94" r="13" fill="#F5A524"/>
+  <circle cx="80" cy="140" r="10" fill="#F5A524"/>
+  <circle cx="176" cy="136" r="10" fill="#F5A524"/></g>
+  <text x="232" y="126" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="60" font-weight="bold"
+        fill="#15161A" letter-spacing="1">NODECK<tspan fill="#F5A524"> AI</tspan></text>
+  <text x="235" y="166" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="24" fill="#6B7280"
+        letter-spacing="2.5">STARTUP DEAL-FLOW INTELLIGENCE</text>
+</svg>

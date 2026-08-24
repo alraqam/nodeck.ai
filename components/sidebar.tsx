@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { clearToken } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -26,8 +27,7 @@ export function Sidebar() {
         <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r bg-card/40">
             <div className="flex h-14 items-center justify-between border-b px-4">
                 <Link href="/dashboard" className="flex items-center gap-2">
-                    <span className="h-4 w-1 rounded-full bg-primary" />
-                    <span className="text-sm font-semibold tracking-tight">NoDeck</span>
+                    <Logo />
                 </Link>
                 <ThemeToggle className="h-7 w-7 text-muted-foreground" />
             </div>
