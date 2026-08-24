@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -11,6 +12,10 @@ class Startup(Base):
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, index=True, nullable=False)
     one_liner = Column(String, nullable=True)
+    # PRE_SEED | SEED | SERIES_A. Plain string, not a PG enum: adding a
+    # value to a PG enum needs a migration, and stages get added.
+    stage = Column(String, nullable=True)
+    industry = Column(ARRAY(String), nullable=True)
     # Storing the entire Intelligence Profile structure as JSONB for flexibility
     sip_data = Column(JSONB, nullable=True)
     

@@ -34,12 +34,78 @@ class InvestmentMemoSection(BaseModel):
 
 class InvestmentMemo(BaseModel):
     sections: List[InvestmentMemoSection]
-    recommendation: str = Field(description="Pass or Investigate")
+    recommendation: str = Field(description="Either 'Pass' or 'Investigate'.")
 
 
-class InvestorView(BaseModel):
-    investor_name: str
-    customized_pitch: str
+class Slide(BaseModel):
+    title: str = Field(description="Slide headline. Six words or fewer.")
+    bullets: List[str] = Field(
+        description="Three to five bullets. Each one line, specific, no marketing adjectives."
+    )
+    speaker_notes: str = Field(
+        description="What the founder says out loud on this slide. Two or three sentences."
+    )
+
+
+class PitchDeck(BaseModel):
+    """The irony is deliberate: NoDeck generates the deck as an OUTPUT of the
+    Intelligence Profile, rather than making the founder start from one."""
+
+    title: str = Field(description="Deck title - usually the company name.")
+    subtitle: str = Field(description="One-line positioning statement.")
+    slides: List[Slide] = Field(
+        description=(
+            "Ten to twelve slides in standard order: Problem, Solution, Why Now, "
+            "Market, Product, Business Model, Traction, Competition, Team, The Ask."
+        )
+    )
+
+
+class InvestorViewSection(BaseModel):
+    title: str = Field(description="Section name, e.g. 'Problem' or 'Market'.")
+    content: str = Field(description="The section rewritten for this investor.")
+
+
+class InvestorViewContent(BaseModel):
+    angle: str = Field(
+        description="One sentence naming the specific angle taken for this investor."
+    )
+    sections: List[InvestorViewSection] = Field(
+        description="The reframed Problem and Market sections, plus any others worth retelling."
+    )
+    metrics_to_lead_with: List[str] = Field(
+        description="The metrics from the SIP this investor will care about most."
+    )
+    talking_points: List[str] = Field(
+        description="Short points the founder should make in the first meeting."
+    )
+
+
+class ParsedDeckSIP(BaseModel):
+    """What we could recover from an uploaded PDF. Every field optional: a deck
+    routinely omits half of these, and a hallucinated TAM is worse than a gap."""
+
+    one_liner: Optional[str] = Field(default=None, description="Company one-liner if stated.")
+    problem_description: Optional[str] = None
+    pain_points: List[str] = Field(default_factory=list)
+    solution_description: Optional[str] = None
+    product_name: Optional[str] = None
+    value_proposition: Optional[str] = None
+    moat: Optional[str] = None
+    tech_stack: List[str] = Field(default_factory=list)
+    tam: Optional[float] = Field(default=None, description="Total addressable market in USD.")
+    sam: Optional[float] = Field(default=None, description="Serviceable available market in USD.")
+    som: Optional[float] = Field(default=None, description="Obtainable market in USD.")
+    target_customer_persona: Optional[str] = None
+    milestones: List[str] = Field(default_factory=list)
+    customer_logos: List[str] = Field(default_factory=list)
+    round_stage: Optional[str] = None
+    ask_amount: Optional[float] = Field(default=None, description="Amount being raised, USD.")
+    use_of_funds: Optional[str] = None
+    notes: str = Field(
+        default="",
+        description="One sentence on what the deck did NOT contain, for the founder to fill in.",
+    )
 
 
 # --- API models -----------------------------------------------------------
@@ -51,6 +117,7 @@ class ReportOut(BaseModel):
     type: str
     status: str
     content: Optional[Dict[str, Any]] = None
+    score_summary: Optional[Dict[str, Any]] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -59,3 +126,31 @@ class ReportOut(BaseModel):
 class AnalysisTriggerResponse(BaseModel):
     report_id: uuid.UUID
     status: str
+
+
+class InvestorViewCreate(BaseModel):
+    investor_name: str = Field(min_length=1, max_length=120)
+    investor_thesis: Optional[str] = Field(default=None, max_length=2000)
+
+
+class InvestorViewTriggerResponse(BaseModel):
+    view_id: uuid.UUID
+    status: str
+
+
+class InvestorViewOut(BaseModel):
+    id: uuid.UUID
+    startup_id: uuid.UUID
+    investor_name: str
+    investor_thesis: Optional[str] = None
+    status: str
+    content: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DeckUploadResponse(BaseModel):
+    status: str
+    fields_filled: List[str]
+    notes: str

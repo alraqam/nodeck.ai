@@ -102,6 +102,12 @@ class SIPUpdate(BaseModel):
 class StartupBase(BaseModel):
     name: Optional[str] = None
     one_liner: Optional[str] = None
+    # PRE_SEED | SEED | SERIES_A per database_schema.md.
+    stage: Optional[str] = None
+    # Optional, not `= []`: the column is nullable and a startup created
+    # without industries stores NULL, which a bare List[str] rejects on the
+    # way back out.
+    industry: Optional[List[str]] = None
 
 
 class StartupCreate(StartupBase):
@@ -111,12 +117,28 @@ class StartupCreate(StartupBase):
     # register an "Acme".
 
 
+class StartupUpdate(BaseModel):
+    """Edit the basics. Every field optional so a PATCH can carry just one.
+
+    `slug` is intentionally not updatable: it is referenced externally and
+    rewriting it would break any link already shared with an investor.
+    """
+
+    name: Optional[str] = None
+    one_liner: Optional[str] = None
+    stage: Optional[str] = None
+    industry: Optional[List[str]] = None
+
+
 class StartupSummary(StartupBase):
     """List view - omits the (potentially large) SIP blob."""
 
     id: uuid.UUID
     slug: Optional[str] = None
     created_at: datetime
+    # Latest COMPLETED fundability score, or None. Filled by the list
+    # endpoint from reports.score_summary so the dashboard avoids an N+1.
+    latest_score: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 

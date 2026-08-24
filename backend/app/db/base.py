@@ -4,3 +4,4 @@ from app.db.base_class import Base  # noqa
 from app.models.user import User  # noqa
 from app.models.startup import Startup  # noqa
 from app.models.report import Report  # noqa
+from app.models.investor_view import InvestorView  # noqa

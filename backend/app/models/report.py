@@ -22,6 +22,9 @@ class Report(Base):
     type = Column(String, nullable=False) # Enum
     status = Column(String, default=ReportStatus.PENDING, nullable=False)
     content = Column(JSONB, nullable=True) # The actual result
+    # Denormalised {total_score, breakdown} for FUNDABILITY_SCORE reports.
+    # Lets the history list render scores without shipping every full report.
+    score_summary = Column(JSONB, nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
