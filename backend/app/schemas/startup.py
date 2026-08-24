@@ -1,19 +1,34 @@
-from typing import List, Optional, Any, Dict
-from pydantic import BaseModel, ConfigDict
 import uuid
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-# --- SIP Components ---
+from pydantic import BaseModel, ConfigDict
+
+# --- SIP components -------------------------------------------------------
+#
+# Field names follow design/sip_model.md, which is canonical. Where
+# design/database_schema.md disagrees (total_addressable_market vs tam, etc.)
+# it is the stale document.
+#
+# Every field is Optional. The SIP is a draft document a founder fills in over
+# several sittings - a half-completed section must not 422 the whole save.
+
 
 class Identity(BaseModel):
     website: Optional[str] = None
     location: Optional[str] = None
     founded_year: Optional[int] = None
+    contact_email: Optional[str] = None
+    # `name` from sip_model.md is deliberately omitted: it duplicates the
+    # startups.name column, which is the single source of truth.
+
 
 class Problem(BaseModel):
     description: Optional[str] = None
     pain_points: List[str] = []
     current_solutions: Optional[str] = None
+    validated: bool = False
+
 
 class Solution(BaseModel):
     product_name: Optional[str] = None
@@ -22,6 +37,7 @@ class Solution(BaseModel):
     tech_stack: List[str] = []
     moat: Optional[str] = None
 
+
 class Market(BaseModel):
     tam: Optional[int] = None
     sam: Optional[int] = None
@@ -29,15 +45,20 @@ class Market(BaseModel):
     market_growth_rate: Optional[float] = None
     target_customer_persona: Optional[str] = None
 
+
 class Traction(BaseModel):
     metrics: Dict[str, float] = {}
     milestones: List[str] = []
+    customer_logos: List[str] = []
+
 
 class TeamMember(BaseModel):
-    name: str
-    role: str
+    name: Optional[str] = None
+    role: Optional[str] = None
     linkedin: Optional[str] = None
     bio: Optional[str] = None
+    superpower: Optional[str] = None
+
 
 class Fundraising(BaseModel):
     round_stage: Optional[str] = None
@@ -45,7 +66,10 @@ class Fundraising(BaseModel):
     valuation_cap: Optional[int] = None
     use_of_funds: Optional[str] = None
 
+
 class StartupIntelligenceProfile(BaseModel):
+    """The full profile, as handed to the LLM."""
+
     identity: Identity = Identity()
     problem: Problem = Problem()
     solution: Solution = Solution()
@@ -54,29 +78,55 @@ class StartupIntelligenceProfile(BaseModel):
     team: List[TeamMember] = []
     fundraising: Fundraising = Fundraising()
 
-# --- Shared Properties ---
+
+class SIPUpdate(BaseModel):
+    """Partial SIP update.
+
+    Every section defaults to None so the handler can use exclude_unset to tell
+    "the client did not send this section" apart from "the client cleared it".
+    Sections that ARE sent are replaced wholesale.
+    """
+
+    identity: Optional[Identity] = None
+    problem: Optional[Problem] = None
+    solution: Optional[Solution] = None
+    market: Optional[Market] = None
+    traction: Optional[Traction] = None
+    team: Optional[List[TeamMember]] = None
+    fundraising: Optional[Fundraising] = None
+
+
+# --- API models -----------------------------------------------------------
+
 
 class StartupBase(BaseModel):
     name: Optional[str] = None
     one_liner: Optional[str] = None
-    slug: Optional[str] = None
 
-# --- API Models ---
 
 class StartupCreate(StartupBase):
     name: str
-    slug: str
+    # `slug` is generated server-side. It is globally unique, so letting the
+    # client derive it from the name collides the moment two founders both
+    # register an "Acme".
 
-class StartupUpdate(StartupBase):
-    pass
 
-class StartupUpdateSIP(BaseModel):
-    sip_data: StartupIntelligenceProfile
+class StartupSummary(StartupBase):
+    """List view - omits the (potentially large) SIP blob."""
+
+    id: uuid.UUID
+    slug: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Startup(StartupBase):
     id: uuid.UUID
     founder_id: uuid.UUID
-    sip_data: Optional[Dict[str, Any]] = None # Loose typing for JSONB but validated on input
+    slug: Optional[str] = None
+    # Loosely typed on the way out; strictly validated on the way in.
+    sip_data: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
