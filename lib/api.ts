@@ -1,7 +1,10 @@
 import type {
+  DeckUploadResult,
   FundabilityAnalysis,
+  InvestorView,
   Report,
   SIP,
+  Stage,
   Startup,
   StartupSummary,
   User,
@@ -86,6 +89,13 @@ async function request<T>(
   return (await res.json()) as T
 }
 
+/** All three generations share a response shape and only differ by path. */
+function triggerReport(id: string, kind: "fundability" | "memo" | "deck") {
+  return request<{ report_id: string; status: string }>(`/analysis/${id}/${kind}`, {
+    method: "POST",
+  })
+}
+
 export const api = {
   register: (body: { email: string; password: string; full_name?: string }) =>
     request<User>("/auth/register", { method: "POST", body: JSON.stringify(body) }),
@@ -105,10 +115,45 @@ export const api = {
 
   listStartups: () => request<StartupSummary[]>("/startups"),
 
-  createStartup: (body: { name: string; one_liner?: string }) =>
-    request<Startup>("/startups", { method: "POST", body: JSON.stringify(body) }),
+  createStartup: (body: {
+    name: string
+    one_liner?: string
+    stage?: Stage
+    industry?: string[]
+  }) => request<Startup>("/startups", { method: "POST", body: JSON.stringify(body) }),
 
   getStartup: (id: string) => request<Startup>(`/startups/${id}`),
+
+  updateStartup: (
+    id: string,
+    body: {
+      name?: string
+      one_liner?: string
+      stage?: Stage | null
+      industry?: string[]
+    },
+  ) =>
+    request<Startup>(`/startups/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  deleteStartup: (id: string) =>
+    request<void>(`/startups/${id}`, { method: "DELETE" }),
+
+  /** Extract a PDF deck into the profile. Fills only empty fields; anything
+   *  already typed wins. Runs synchronously - the founder is watching. */
+  uploadDeck: (id: string, file: File) => {
+    const body = new FormData()
+    body.append("file", file)
+    // `form: true` omits the JSON Content-Type so the browser can set the
+    // multipart boundary itself. Setting it by hand breaks the upload.
+    return request<DeckUploadResult>(
+      `/startups/${id}/upload-deck`,
+      { method: "POST", body },
+      { form: true },
+    )
+  },
 
   updateSip: (id: string, body: Partial<SIP>) =>
     request<Startup>(`/startups/${id}/sip`, {
@@ -118,13 +163,30 @@ export const api = {
 
   listReports: (id: string) => request<Report[]>(`/startups/${id}/reports`),
 
-  analyze: (id: string) =>
-    request<{ report_id: string; status: string }>(
-      `/analysis/${id}/fundability`,
-      { method: "POST" },
-    ),
+  analyze: (id: string) => triggerReport(id, "fundability"),
+  generateMemo: (id: string) => triggerReport(id, "memo"),
+  generateDeck: (id: string) => triggerReport(id, "deck"),
 
   getReport: (reportId: string) => request<Report>(`/analysis/reports/${reportId}`),
+
+  createInvestorView: (id: string, body: { investor_name: string; investor_thesis?: string }) =>
+    request<{ view_id: string; status: string }>(`/analysis/${id}/investor-views`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  listInvestorViews: (id: string) =>
+    request<InvestorView[]>(`/analysis/${id}/investor-views`),
+
+  getInvestorView: (viewId: string) =>
+    request<InvestorView>(`/analysis/investor-views/${viewId}`),
 }
 
-export type { FundabilityAnalysis, Report, Startup, StartupSummary, User }
+export type {
+  FundabilityAnalysis,
+  InvestorView,
+  Report,
+  Startup,
+  StartupSummary,
+  User,
+}

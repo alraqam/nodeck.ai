@@ -59,11 +59,17 @@ export interface SIP {
   fundraising: Fundraising
 }
 
+export type Stage = "PRE_SEED" | "SEED" | "SERIES_A"
+
 export interface StartupSummary {
   id: string
   name?: string | null
   one_liner?: string | null
   slug?: string | null
+  stage?: Stage | string | null
+  industry?: string[] | null
+  /** Latest COMPLETED fundability score, or null if never scored. */
+  latest_score?: number | null
   created_at: string
 }
 
@@ -91,14 +97,72 @@ export interface FundabilityAnalysis {
   green_flags: string[]
 }
 
+export type ReportType = "FUNDABILITY_SCORE" | "INVESTMENT_MEMO" | "PITCH_DECK"
+
+export interface MemoSection {
+  title: string
+  content: string
+}
+
+export interface InvestmentMemo {
+  sections: MemoSection[]
+  recommendation: string
+}
+
+export interface Slide {
+  title: string
+  bullets: string[]
+  speaker_notes: string
+}
+
+export interface PitchDeck {
+  title: string
+  subtitle: string
+  slides: Slide[]
+}
+
+/** The union of every report body, discriminated by Report["type"]. */
+export type ReportContent = Partial<FundabilityAnalysis> &
+  Partial<InvestmentMemo> &
+  Partial<PitchDeck> & { error?: string }
+
 export interface Report {
   id: string
   startup_id: string
-  type: string
+  type: ReportType | string
   status: ReportStatus
-  /** FundabilityAnalysis when COMPLETED, { error } when FAILED, null when PENDING. */
-  content?: (Partial<FundabilityAnalysis> & { error?: string }) | null
+  /** Shape depends on `type`; { error } when FAILED, null when PENDING. */
+  content?: ReportContent | null
+  score_summary?: { total_score?: number; breakdown?: ScoreBreakdown } | null
   created_at: string
+}
+
+export interface InvestorViewSection {
+  title: string
+  content: string
+}
+
+export interface InvestorViewContent {
+  angle: string
+  sections: InvestorViewSection[]
+  metrics_to_lead_with: string[]
+  talking_points: string[]
+}
+
+export interface InvestorView {
+  id: string
+  startup_id: string
+  investor_name: string
+  investor_thesis?: string | null
+  status: ReportStatus
+  content?: (Partial<InvestorViewContent> & { error?: string }) | null
+  created_at: string
+}
+
+export interface DeckUploadResult {
+  status: string
+  fields_filled: string[]
+  notes: string
 }
 
 export interface User {

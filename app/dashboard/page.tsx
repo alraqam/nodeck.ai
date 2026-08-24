@@ -5,10 +5,17 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { api, ApiError } from "@/lib/api"
 import type { StartupSummary } from "@/lib/types"
 import { toast } from "sonner"
 import { ArrowRight, Plus } from "lucide-react"
+
+/** Same thresholds the report hero uses, so a card and its report never
+ *  disagree about whether a score is good. */
+const scoreTone = (score: number) =>
+    score >= 70 ? "text-score-high" : score >= 45 ? "text-score-mid" : "text-score-low"
 
 export default function DashboardPage() {
     const [startups, setStartups] = useState<StartupSummary[] | null>(null)
@@ -87,18 +94,37 @@ export default function DashboardPage() {
                                         <h3 className="min-w-0 truncate font-semibold tracking-tight">
                                             {s.name}
                                         </h3>
-                                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                                        {typeof s.latest_score === "number" ? (
+                                            <span
+                                                className={cn(
+                                                    "shrink-0 font-mono text-2xl leading-none tabular",
+                                                    scoreTone(s.latest_score),
+                                                )}
+                                            >
+                                                {s.latest_score}
+                                            </span>
+                                        ) : (
+                                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                                        )}
                                     </div>
                                     <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                                         {s.one_liner || "No one-liner yet"}
                                     </p>
-                                    <p className="mt-auto pt-3 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted-foreground/60">
-                                        {new Date(s.created_at).toLocaleDateString(undefined, {
-                                            day: "2-digit",
-                                            month: "short",
-                                            year: "numeric",
-                                        })}
-                                    </p>
+                                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
+                                        {s.stage && (
+                                            <Badge variant="outline">{s.stage.replace(/_/g, " ")}</Badge>
+                                        )}
+                                        {s.industry?.slice(0, 2).map((tag) => (
+                                            <Badge key={tag}>{tag}</Badge>
+                                        ))}
+                                        <span className="ml-auto font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted-foreground/60">
+                                            {new Date(s.created_at).toLocaleDateString(undefined, {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                            })}
+                                        </span>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </Link>
