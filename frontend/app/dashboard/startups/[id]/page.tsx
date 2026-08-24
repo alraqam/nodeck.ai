@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ReportViewer } from "@/components/report-viewer"
+import { ScoreTrend } from "@/components/score-trend"
+import { ExportMenu } from "@/components/export-menu"
 import { MemoViewer } from "@/components/memo-viewer"
 import { DeckViewer } from "@/components/deck-viewer"
 import { InvestorViews } from "@/components/investor-views"
@@ -56,7 +58,7 @@ export default function StartupDetailPage() {
         <div className="space-y-6">
             <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
             >
                 <ArrowLeft className="h-3.5 w-3.5" /> All profiles
             </Link>
@@ -88,7 +90,7 @@ export default function StartupDetailPage() {
                         </div>
                     )}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2 print:hidden">
                     <Link href={`/dashboard/startups/${id}/edit`}>
                         <Button variant="outline">
                             <Pencil className="mr-2 h-4 w-4" /> Edit profile
@@ -106,7 +108,7 @@ export default function StartupDetailPage() {
             </div>
 
             <Tabs defaultValue="score">
-                <TabsList>
+                <TabsList className="print:hidden">
                     <TabsTrigger value="score">Score</TabsTrigger>
                     <TabsTrigger value="memo">Memo</TabsTrigger>
                     <TabsTrigger value="deck">Deck</TabsTrigger>
@@ -126,6 +128,8 @@ export default function StartupDetailPage() {
                 <TabsContent value="score" className="mt-6">
                     <ReportPane
                         report={latest("FUNDABILITY_SCORE")}
+                        startupName={startup.name ?? "Startup"}
+                        before={<ScoreTrend reports={reports} />}
                         render={(r) => <ReportViewer report={r} />}
                         empty={{
                             eyebrow: "Not scored yet",
@@ -143,6 +147,7 @@ export default function StartupDetailPage() {
                 <TabsContent value="memo" className="mt-6">
                     <ReportPane
                         report={latest("INVESTMENT_MEMO")}
+                        startupName={startup.name ?? "Startup"}
                         render={(r) => <MemoViewer report={r} />}
                         empty={{
                             eyebrow: "No memo yet",
@@ -160,6 +165,7 @@ export default function StartupDetailPage() {
                 <TabsContent value="deck" className="mt-6">
                     <ReportPane
                         report={latest("PITCH_DECK")}
+                        startupName={startup.name ?? "Startup"}
                         render={(r) => <DeckViewer report={r} />}
                         empty={{
                             eyebrow: "No deck yet",
@@ -269,13 +275,18 @@ function GenerateButton({
 /** A generated artefact, or the invitation to generate it. */
 function ReportPane({
     report,
+    startupName,
     render,
+    before,
     empty,
     generate,
     isBusy,
 }: {
     report: Report | null
+    startupName: string
     render: (report: Report) => React.ReactNode
+    /** Rendered above the artefact when one exists (e.g. the score trend). */
+    before?: React.ReactNode
     empty: {
         eyebrow: string
         title: string
@@ -290,9 +301,15 @@ function ReportPane({
     if (report) {
         return (
             <div className="space-y-4">
+                {report.status === "COMPLETED" && before}
                 {render(report)}
                 {report.status !== "PENDING" && (
-                    <div className="flex justify-end">
+                    <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+                        {report.status === "COMPLETED" ? (
+                            <ExportMenu report={report} startupName={startupName} />
+                        ) : (
+                            <span />
+                        )}
                         <GenerateButton
                             kind={empty.kind}
                             icon={empty.icon}

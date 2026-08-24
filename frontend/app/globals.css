@@ -192,3 +192,66 @@
     background-size: 32px 32px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Print.
+
+   The PDF route is the browser's own print dialog, so this stylesheet is what
+   turns the app into a document: drop the navigation, force an ink-on-paper
+   palette regardless of the active theme, and stop cards being split across a
+   page break mid-sentence.
+--------------------------------------------------------------------------- */
+@media print {
+  /* Force the light palette. A dark-theme print wastes a cartridge and most
+     browsers drop the background anyway, leaving pale text on white. */
+  :root,
+  :root.dark {
+    --background: #FFFFFF;
+    --foreground: #15161A;
+    --card: #FFFFFF;
+    --card-foreground: #15161A;
+    --muted: #F1F1EF;
+    --muted-foreground: #44454B;
+    --border: #C9C9C5;
+    --primary: #8A5D0A;
+    --score-low: #A81E16;
+    --score-mid: #8A5D0A;
+    --score-high: #0F5E41;
+  }
+
+  .print\:hidden,
+  [data-sonner-toaster],
+  nextjs-portal {
+    display: none !important;
+  }
+
+  .grid-texture {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  /* Hand the page its full width back once the sidebar is gone. */
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* Cards are the unit of meaning here; a split one reads as two broken ones. */
+  .rounded-lg,
+  li,
+  tr {
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+
+  /* A URL after every link is noise when the links are all in-app. */
+  a[href]::after {
+    content: none !important;
+  }
+}

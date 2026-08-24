@@ -130,6 +130,18 @@ frontend/    Next.js App Router
 design/      Specification: API, schema, SIP model, prompts, architecture
 ```
 
+## Tests
+
+```bash
+cd backend  && python -m pytest      # 37 tests
+cd frontend && npm test              # 28 tests
+```
+
+Neither suite needs an API key or a database — they cover the logic that has
+teeth: the deck-merge guarantee that founder input is never overwritten, the
+completeness gate that stops a paid call on an empty profile, score clamping,
+and the export serialisers.
+
 ## Status
 
 An MVP. Known gaps, in rough priority order:
@@ -142,4 +154,3 @@ An MVP. Known gaps, in rough priority order:
 - **No refresh tokens.** Access tokens are long-lived instead.
 - **`INVESTOR` and `ADMIN` roles exist but are unused.** Every registration
   creates a `FOUNDER`.
-- **No test suite.**

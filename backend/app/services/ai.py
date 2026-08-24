@@ -142,7 +142,9 @@ def _clamp(analysis: FundabilityAnalysis) -> FundabilityAnalysis:
     """Enforce score ranges here rather than in the JSON Schema (see schemas/report.py)."""
     analysis.total_score = max(0, min(100, analysis.total_score))
     b = analysis.breakdown
-    for field in b.model_fields:
+    # From the class, not the instance: instance access is deprecated in
+    # Pydantic 2.11 and removed in V3.
+    for field in type(b).model_fields:
         setattr(b, field, max(0, min(10, getattr(b, field))))
     return analysis
 

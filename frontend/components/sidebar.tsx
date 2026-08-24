@@ -24,7 +24,7 @@ export function Sidebar() {
     }
 
     return (
-        <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r bg-card/40">
+        <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col border-r bg-card/40 print:hidden">
             <div className="flex h-14 items-center justify-between border-b px-4">
                 <Link href="/dashboard" className="flex items-center gap-2">
                     <Logo />
