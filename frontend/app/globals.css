@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+   NoDeck design tokens.
+
+   Palette is taken from the brand kit and the President AI Award deck, not
+   invented: amber #F5A524 on near-black #15161A / #0C0D10 with #FAFAF9 paper
+   and #9A9CA3 muted text. The same amber appears in the logo's node graph.
+
+   Two separate amber tokens on purpose:
+     --brand    fixed #F5A524, for the logo and brand fills. Never shifts.
+     --primary  theme-aware interaction colour. In light mode it deepens to
+                stay readable as text on white; brand amber only hits ~2.1:1
+                there, which fails contrast for anything but a filled block.
+
+   Every value is a complete color, never a bare HSL triplet: Tailwind v4 uses
+   these directly, so `bg-primary/90` only works if the token already resolves.
+--------------------------------------------------------------------------- */
+
+:root {
+  --background: #FAFAF9;
+  --foreground: #15161A;
+
+  --card: #FFFFFF;
+  --card-foreground: #15161A;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #15161A;
+
+  /* Deepened amber: readable as text on paper. Filled buttons still carry the
+     true brand amber via --brand below. */
+  --primary: #96650B;
+  --primary-foreground: #FFFFFF;
+
+  --brand: #F5A524;
+  --brand-foreground: #15161A;
+
+  --secondary: #F1F1EF;
+  --secondary-foreground: #15161A;
+
+  --muted: #F1F1EF;
+  --muted-foreground: #6B7280;
+
+  --accent: #F1F1EF;
+  --accent-foreground: #15161A;
+
+  --destructive: #C0392B;
+  --destructive-foreground: #FFFFFF;
+
+  --score-low: #B3261E;
+  --score-mid: #96650B;
+  --score-high: #14724F;
+
+  --border: #E4E4E1;
+  --input: #D8D8D4;
+  --ring: #F5A524;
+
+  --radius: 0.25rem;
+}
+
+.dark {
+  --background: #0C0D10;
+  --foreground: #FAFAF9;
+
+  --card: #15161A;
+  --card-foreground: #FAFAF9;
+
+  --popover: #17181D;
+  --popover-foreground: #FAFAF9;
+
+  --primary: #F5A524;
+  --primary-foreground: #15161A;
+
+  --brand: #F5A524;
+  --brand-foreground: #15161A;
+
+  --secondary: #212228;
+  --secondary-foreground: #FAFAF9;
+
+  --muted: #1C1D22;
+  --muted-foreground: #9A9CA3;
+
+  --accent: #212228;
+  --accent-foreground: #FAFAF9;
+
+  --destructive: #F0655E;
+  --destructive-foreground: #15161A;
+
+  --score-low: #F0655E;
+  --score-mid: #F5A524;
+  --score-high: #3DD68C;
+
+  --border: #2A2B31;
+  --input: #3A3B42;
+  --ring: #F5A524;
+}
+
+/* `@theme inline` rather than plain `@theme`: values in a plain @theme block
+   are static, and the .dark class above could not override them. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-score-low: var(--score-low);
+  --color-score-mid: var(--score-mid);
+  --color-score-high: var(--score-high);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  /* Tailwind v4 defaults border-color to currentColor; every card uses a bare
+     `border`, so without this they render with text-coloured edges. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Headings are the one place we buy tension: tight tracking. */
+  h1, h2, h3 {
+    letter-spacing: -0.021em;
+  }
+
+  /* Numbers must not jitter while a report polls. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Number spinners are noise in a data form. */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* Small-caps section label. The most identity-carrying element in the
+     system - it sits above every block of data. */
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+
+  /* Faint graph-paper texture for hero surfaces. */
+  .grid-texture {
+    background-image:
+      linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}

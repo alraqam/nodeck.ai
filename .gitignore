@@ -15,6 +15,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# The frontend/ directory has its own git repository (frontend/.git).
-# It is versioned there, not here, to preserve its existing history.
-/frontend/
+
+# Disabled nested repo, kept until the consolidation is confirmed pushed.
+.git.disabled/
