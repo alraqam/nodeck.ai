@@ -1,33 +1,40 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, PlusCircle, FileText, Settings, LogOut } from "lucide-react"
+import { clearToken } from "@/lib/api"
+import { LayoutDashboard, LogOut, PlusCircle } from "lucide-react"
+
+const links = [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
+    { href: "/dashboard/startups/new", label: "New Profile", icon: PlusCircle, exact: false },
+]
 
 export function Sidebar() {
     const pathname = usePathname()
+    const router = useRouter()
 
-    const links = [
-        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-        { href: "/dashboard/startups/new", label: "New Startup Profile", icon: PlusCircle },
-        { href: "/dashboard/reports", label: "Reports", icon: FileText },
-        { href: "/dashboard/settings", label: "Settings", icon: Settings },
-    ]
+    const logout = () => {
+        clearToken()
+        router.replace("/login")
+    }
 
     return (
         <div className="flex h-full min-h-screen w-64 flex-col border-r bg-muted/20 px-4 py-8">
-            <div className="mb-8 px-2 text-xl font-bold tracking-tight">
+            <Link href="/dashboard" className="mb-8 px-2 text-xl font-bold tracking-tight">
                 NoDeck
-            </div>
+            </Link>
             <nav className="flex flex-1 flex-col space-y-2">
                 {links.map((link) => {
                     const Icon = link.icon
+                    const active = link.exact
+                        ? pathname === link.href
+                        : pathname.startsWith(link.href)
                     return (
                         <Link key={link.href} href={link.href}>
                             <Button
-                                variant={pathname === link.href ? "secondary" : "ghost"}
+                                variant={active ? "secondary" : "ghost"}
                                 className="w-full justify-start gap-2"
                             >
                                 <Icon className="h-4 w-4" />
@@ -38,7 +45,11 @@ export function Sidebar() {
                 })}
             </nav>
             <div className="mt-auto">
-                <Button variant="ghost" className="w-full justify-start gap-2 text-destructive hover:text-destructive">
+                <Button
+                    variant="ghost"
+                    onClick={logout}
+                    className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                >
                     <LogOut className="h-4 w-4" />
                     Logout
                 </Button>

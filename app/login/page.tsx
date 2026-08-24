@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { api, ApiError, setToken } from "@/lib/api"
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -20,6 +22,7 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
 
     const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
         resolver: zodResolver(loginSchema),
@@ -28,30 +31,15 @@ export default function LoginPage() {
     async function onSubmit(data: LoginForm) {
         setIsLoading(true)
         try {
-            const formBody = new URLSearchParams()
-            formBody.append("username", data.email)
-            formBody.append("password", data.password)
-
-            const res = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: formBody,
-            })
-
-            if (!res.ok) {
-                throw new Error("Invalid credentials")
-            }
-
-            const result = await res.json()
-            // Store token (in a real app, use HTTPOnly cookie or secure storage logic)
-            localStorage.setItem("token", result.access_token)
-            toast.success("Logged in successfully")
-            window.location.href = "/dashboard"
+            const { access_token } = await api.login(data.email, data.password)
+            setToken(access_token)
+            toast.success("Signed in")
+            router.push("/dashboard")
         } catch (error) {
-            toast.error("Failed to login", { description: "Please check your credentials." })
-        } finally {
+            toast.error("Could not sign in", {
+                description:
+                    error instanceof ApiError ? error.message : "Please try again.",
+            })
             setIsLoading(false)
         }
     }

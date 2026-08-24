@@ -1,137 +1,103 @@
 "use client"
 
 import { useState } from "react"
-import { useForm, FormProvider } from "react-hook-form"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea" // Need to create TextArea
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { api, ApiError } from "@/lib/api"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
-// We need a partial schema here matching the backend SIP
-const startupSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    one_liner: z.string().max(100, "Keep it short"),
-    identity: z.object({
-        website: z.string().url().optional().or(z.literal("")),
-        location: z.string().min(1, "Location required"),
-    }),
-    problem: z.object({
-        description: z.string().min(20, "Please elaborate"),
-        // pain_points array handling is complex in pure HTML forms, using comma separated for MVP
-        pain_points_str: z.string(),
-    }),
-    // ... simplified for MVP
+// Just enough to create the row. The Intelligence Profile is filled in on the
+// next screen, because the SIP is a column ON the startup - an id has to exist
+// before it can be attached.
+const createSchema = z.object({
+    name: z.string().min(1, "Name is required").max(120),
+    one_liner: z.string().max(160, "Keep it under 160 characters").optional(),
 })
 
+type CreateForm = z.infer<typeof createSchema>
+
 export default function NewStartupPage() {
-    const methods = useForm({
-        // resolver: zodResolver(startupSchema), // Skip strict validation for partial saving MVP
+    const router = useRouter()
+    const [isLoading, setIsLoading] = useState(false)
+
+    const { register, handleSubmit, formState: { errors } } = useForm<CreateForm>({
+        resolver: zodResolver(createSchema),
     })
 
-    const onSubmit = async (data: any) => {
-        // Transform arrays
-        const formattedData = {
-            ...data,
-            slug: data.name.toLowerCase().replace(/ /g, "-"),
-            // Transform pain_points_str -> array
-        }
-
-        // Call API
-        toast.info("Saving profile...", { description: "Connecting to backend..." })
-
+    const onSubmit = async (data: CreateForm) => {
+        setIsLoading(true)
         try {
-            const token = localStorage.getItem("token")
-            const res = await fetch("/api/startups", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(formattedData)
+            const created = await api.createStartup({
+                name: data.name,
+                one_liner: data.one_liner || undefined,
             })
-            if (!res.ok) throw new Error("Failed to create")
-            toast.success("Startup Created!")
-            // Redirect to dashboard
-        } catch (e) {
-            toast.error("Error creating startup")
+            toast.success("Profile created", { description: "Now fill in the details." })
+            router.push(`/dashboard/startups/${created.id}/edit`)
+        } catch (error) {
+            toast.error("Could not create profile", {
+                description: error instanceof ApiError ? error.message : "Please try again.",
+            })
+            setIsLoading(false)
         }
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">Create Startup Profile</h1>
+        <div className="mx-auto max-w-xl space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">New Profile</h1>
+                <p className="text-muted-foreground">Start with the basics.</p>
             </div>
 
-            <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit(onSubmit)}>
-                    <Tabs defaultValue="basics" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="basics">Basics</TabsTrigger>
-                            <TabsTrigger value="problem">Problem</TabsTrigger>
-                            <TabsTrigger value="solution">Solution</TabsTrigger>
-                            <TabsTrigger value="market">Market</TabsTrigger>
-                        </TabsList>
-
-                        <div className="mt-6">
-                            <TabsContent value="basics">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Startup Identity</CardTitle>
-                                        <CardDescription>The fundamentals of your company.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid gap-2">
-                                            <Label>Startup Name</Label>
-                                            <Input {...methods.register("name")} placeholder="Acme Inc." />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>One Liner</Label>
-                                            <Input {...methods.register("one_liner")} placeholder="Uber for X" />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>Website</Label>
-                                            <Input {...methods.register("identity.website")} placeholder="https://..." />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>Location</Label>
-                                            <Input {...methods.register("identity.location")} placeholder="San Francisco" />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            <TabsContent value="problem">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>The Problem</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid gap-2">
-                                            <Label>Description</Label>
-                                            <Textarea
-                                                {...methods.register("problem.description")}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            {/* Other tabs omitted for brevity in this step, easy to add */}
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Company</CardTitle>
+                        <CardDescription>
+                            You will fill in the full Intelligence Profile next.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Startup name</Label>
+                            <Input id="name" placeholder="Acme Robotics" {...register("name")} />
+                            {errors.name && (
+                                <p className="text-xs text-destructive">{errors.name.message}</p>
+                            )}
                         </div>
-
-                        <div className="mt-6 flex justify-end gap-4">
-                            <Button variant="outline">Back</Button>
-                            <Button type="submit">Save & Continue</Button>
+                        <div className="grid gap-2">
+                            <Label htmlFor="one_liner">One-liner</Label>
+                            <Input
+                                id="one_liner"
+                                placeholder="Warehouse robots as a service"
+                                {...register("one_liner")}
+                            />
+                            {errors.one_liner && (
+                                <p className="text-xs text-destructive">{errors.one_liner.message}</p>
+                            )}
                         </div>
-                    </Tabs>
-                </form>
-            </FormProvider>
+                    </CardContent>
+                    <CardFooter className="justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => router.push("/dashboard")}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Create and continue
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </form>
         </div>
     )
 }

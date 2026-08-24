@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -10,17 +11,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { api, ApiError } from "@/lib/api"
 
 const registerSchema = z.object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
 type RegisterForm = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
 
     const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
@@ -29,27 +32,20 @@ export default function RegisterPage() {
     async function onSubmit(data: RegisterForm) {
         setIsLoading(true)
         try {
-            const res = await fetch("/api/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: data.email,
-                    password: data.password,
-                    full_name: data.fullName,
-                    role: "FOUNDER"
-                }),
+            // `role` is not sent: the backend always creates a FOUNDER and
+            // ignores a client-supplied role.
+            await api.register({
+                email: data.email,
+                password: data.password,
+                full_name: data.fullName,
             })
-
-            if (!res.ok) {
-                const err = await res.json()
-                throw new Error(err.detail || "Registration failed")
-            }
-
-            toast.success("Account created", { description: "Please login now." })
-            window.location.href = "/login"
-        } catch (error: any) {
-            toast.error("Error", { description: error.message })
-        } finally {
+            toast.success("Account created", { description: "You can sign in now." })
+            router.push("/login")
+        } catch (error) {
+            toast.error("Could not create account", {
+                description:
+                    error instanceof ApiError ? error.message : "Please try again.",
+            })
             setIsLoading(false)
         }
     }
