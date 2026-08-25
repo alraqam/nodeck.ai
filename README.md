@@ -163,6 +163,11 @@ click was a real risk. Edits are kept in the browser as you type and offered
 back on return, cleared once saved so a stale copy can never be restored over
 good data, with a warning before leaving with unsaved changes.
 
+**It works on a phone.** The dashboard rail is desktop-only; below `md` it is
+replaced by a compact bar, because a fixed 224px sidebar on a 375px screen left
+151px for the content itself. Every route is checked for sideways scroll and
+tap-target size at phone width.
+
 **Errors never leak internals.** A failed generation stores a generic message;
 the detail goes to the log. `str(exception)` can carry an API key fragment or a
 full connection string into a column the frontend renders.

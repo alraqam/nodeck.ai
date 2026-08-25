@@ -13,7 +13,11 @@ const TabsList = React.forwardRef<
     <TabsPrimitive.List
         ref={ref}
         className={cn(
-            "inline-flex h-10 items-center justify-start gap-1 overflow-x-auto border-b text-muted-foreground",
+            // `flex w-full max-w-full` rather than `inline-flex`: an inline-flex list
+        // sizes to its content, so with seven tabs it grew past the viewport and
+        // its own overflow-x-auto never engaged - the whole page scrolled
+        // sideways instead of the tab strip.
+        "flex h-10 w-full max-w-full items-center justify-start gap-1 overflow-x-auto border-b text-muted-foreground",
             className
         )}
         {...props}

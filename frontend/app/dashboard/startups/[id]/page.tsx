@@ -58,7 +58,8 @@ export default function StartupDetailPage() {
         <div className="space-y-6">
             <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
+                // -ml-2 keeps it visually flush while the padding gives a real tap target.
+                className="-ml-2 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground print:hidden"
             >
                 <ArrowLeft className="h-3.5 w-3.5" /> All profiles
             </Link>
@@ -90,20 +91,25 @@ export default function StartupDetailPage() {
                         </div>
                     )}
                 </div>
-                <div className="flex shrink-0 items-center gap-2 print:hidden">
-                    <Link href={`/dashboard/startups/${id}/edit`}>
-                        <Button variant="outline">
+                {/* No shrink-0: on a phone these two buttons are wider than the screen,
+                    so they wrap and stretch instead of forcing a sideways scroll. */}
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto print:hidden">
+                    <Link href={`/dashboard/startups/${id}/edit`} className="flex-1 sm:flex-none">
+                        <Button variant="outline" className="w-full sm:w-auto">
                             <Pencil className="mr-2 h-4 w-4" /> Edit profile
                         </Button>
                     </Link>
-                    <GenerateButton
-                        kind="FUNDABILITY_SCORE"
-                        icon={<Sparkles className="mr-2 h-4 w-4" />}
-                        label="Analyze fundability"
-                        busyLabel="Analysing"
-                        generate={generate}
-                        isBusy={isBusy}
-                    />
+                    <div className="flex-1 sm:flex-none">
+                        <GenerateButton
+                            kind="FUNDABILITY_SCORE"
+                            icon={<Sparkles className="mr-2 h-4 w-4" />}
+                            label="Analyze fundability"
+                            busyLabel="Analysing"
+                            generate={generate}
+                            isBusy={isBusy}
+                            className="w-full sm:w-auto"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -254,6 +260,7 @@ function GenerateButton({
     generate,
     isBusy,
     variant,
+    className,
 }: {
     kind: ReportType
     icon: React.ReactNode
@@ -262,10 +269,16 @@ function GenerateButton({
     generate: (kind: ReportType) => void
     isBusy: (kind: ReportType) => boolean
     variant?: "default" | "outline"
+    className?: string
 }) {
     const busy = isBusy(kind)
     return (
-        <Button variant={variant} onClick={() => generate(kind)} disabled={busy}>
+        <Button
+            variant={variant}
+            className={className}
+            onClick={() => generate(kind)}
+            disabled={busy}
+        >
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : icon}
             {busy ? busyLabel ?? "Generating" : label}
         </Button>
