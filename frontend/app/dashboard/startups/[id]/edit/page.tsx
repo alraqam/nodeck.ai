@@ -70,7 +70,7 @@ export default function EditSipPage() {
                 </p>
             </div>
 
-            <SipForm initial={startup.sip_data} onSave={save} />
+            <SipForm id={id} initial={startup.sip_data} onSave={save} />
         </div>
     )
 }

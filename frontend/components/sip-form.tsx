@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useFieldArray, useForm } from "react-hook-form"
+import { cloneElement, isValidElement, useId, useState } from "react"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { SIP } from "@/lib/types"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { useFormDraft, useUnsavedChangesWarning } from "@/lib/use-form-draft"
+import { History, Loader2, Plus, Trash2, X } from "lucide-react"
 
 /**
  * Numbers arrive from HTML inputs as strings, so every numeric field is
@@ -228,15 +229,22 @@ function Panel({ value, children }: { value: string; children: React.ReactNode }
 }
 
 export function SipForm({
+    id,
     initial,
     onSave,
 }: {
+    /** Scopes the recovery draft, so two profiles cannot overwrite each other. */
+    id: string
     initial?: Partial<SIP> | null
     onSave: (payload: Partial<SIP>) => Promise<void>
 }) {
     const [saving, setSaving] = useState(false)
 
-    const { register, handleSubmit, control } = useForm<SipForm, unknown, SipParsed>({
+    const { register, handleSubmit, control, reset, formState } = useForm<
+        SipForm,
+        unknown,
+        SipParsed
+    >({
         resolver: zodResolver(sipSchema),
         defaultValues: toDefaults(initial),
     })
@@ -244,10 +252,23 @@ export function SipForm({
     const team = useFieldArray({ control, name: "team" })
     const metrics = useFieldArray({ control, name: "traction.metrics" })
 
+    // Watching the whole form is what makes recovery possible at all: the draft
+    // has to reflect the current values, not the ones at mount.
+    const values = useWatch({ control }) as SipForm
+    const { draft, accept, dismiss, clear } = useFormDraft<SipForm>(id, values, {
+        enabled: formState.isDirty,
+    })
+
+    useUnsavedChangesWarning(formState.isDirty && !saving)
+
     const submit = async (data: SipParsed) => {
         setSaving(true)
         try {
             await onSave(toPayload(data))
+            // The draft has served its purpose; keeping it risks restoring it
+            // over the saved version later.
+            clear()
+            reset(data as unknown as SipForm)
         } finally {
             setSaving(false)
         }
@@ -255,6 +276,28 @@ export function SipForm({
 
     return (
         <form onSubmit={handleSubmit(submit)}>
+            {draft && (
+                <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <History className="h-4 w-4 shrink-0 text-primary" />
+                    <p className="min-w-0 flex-1 text-sm">
+                        You have unsaved changes from{" "}
+                        {new Date(draft.savedAt).toLocaleString()}.
+                    </p>
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                            reset(draft.values, { keepDefaultValues: true })
+                            accept()
+                        }}
+                    >
+                        Restore them
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={dismiss}>
+                        <X className="mr-1.5 h-3 w-3" /> Discard
+                    </Button>
+                </div>
+            )}
             <Tabs defaultValue="identity" className="w-full">
                 <TabsList className="w-full">
                     {TABS.map((t) => (
@@ -379,21 +422,30 @@ export function SipForm({
                             <CardContent className="grid gap-4">
                                 <div className="grid gap-2">
                                     <Label>Metrics</Label>
+                                    {/* These rows sit outside Field, so they carry
+                                        their own names. A placeholder is not a
+                                        label: it disappears the moment you type,
+                                        and screen readers may not announce it at
+                                        all. Numbered so a row can be identified
+                                        when several are on screen. */}
                                     {metrics.fields.map((f, i) => (
                                         <div key={f.id} className="flex gap-2">
                                             <Input
                                                 placeholder="MRR"
+                                                aria-label={`Metric ${i + 1} name`}
                                                 {...register(`traction.metrics.${i}.key` as const)}
                                             />
                                             <Input
                                                 type="number"
                                                 placeholder="42000"
+                                                aria-label={`Metric ${i + 1} value`}
                                                 {...register(`traction.metrics.${i}.value` as const)}
                                             />
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
+                                                aria-label={`Remove metric ${i + 1}`}
                                                 onClick={() => metrics.remove(i)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -501,7 +553,9 @@ export function SipForm({
 
             <div className="sticky bottom-0 mt-6 flex items-center justify-between gap-4 border-t bg-background/85 py-4 backdrop-blur-sm">
                 <p className="text-xs text-muted-foreground">
-                    Saving stores every section, whichever tab you are on.
+                    {formState.isDirty
+                        ? "Unsaved changes, kept in this browser until you save."
+                        : "Saving stores every section, whichever tab you are on."}
                 </p>
                 <Button type="submit" disabled={saving}>
                     {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -521,11 +575,34 @@ function Field({
     hint?: string
     children: React.ReactNode
 }) {
+    // The label used to be a bare sibling of the control, which looks correct
+    // and associates nothing: every input on this form announced as an unnamed
+    // edit box. The inputs are registered by `name` and carry no id of their
+    // own, so one is minted here and wired up on both ends.
+    const generatedId = useId()
+    const child = isValidElement<{ id?: string; "aria-describedby"?: string }>(children)
+        ? children
+        : null
+    const id = child?.props.id ?? generatedId
+    const hintId = hint ? `${id}-hint` : undefined
+
     return (
         <div className="grid gap-2">
-            <Label>{label}</Label>
-            {children}
-            {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+            <Label htmlFor={id}>{label}</Label>
+            {child
+                ? cloneElement(child, {
+                      id,
+                      // Hints carry real constraints ("comma separated"), so
+                      // they should be read out with the field, not left as
+                      // text a screen reader user may never reach.
+                      "aria-describedby": hintId,
+                  })
+                : children}
+            {hint && (
+                <p id={hintId} className="text-xs text-muted-foreground">
+                    {hint}
+                </p>
+            )}
         </div>
     )
 }

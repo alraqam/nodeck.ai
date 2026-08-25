@@ -152,6 +152,12 @@ budget is the looser of the two, because offices and carriers put many people
 behind one address, and a correct login clears the account's budget so
 mistyping costs an innocent user nothing.
 
+**A half-filled profile survives a closed tab.** The Intelligence Profile is
+a long document filled in over several sittings, and losing it to a stray
+click was a real risk. Edits are kept in the browser as you type and offered
+back on return, cleared once saved so a stale copy can never be restored over
+good data, with a warning before leaving with unsaved changes.
+
 **Errors never leak internals.** A failed generation stores a generic message;
 the detail goes to the log. `str(exception)` can carry an API key fragment or a
 full connection string into a column the frontend renders.
@@ -174,7 +180,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 
 ```bash
 cd backend && python -m pytest       # 118 tests
-cd frontend && npm test              # 43 tests
+cd frontend && npm test              # 53 tests
 ```
 
 Neither suite needs an API key. The backend creates its own `nodeck_test`
