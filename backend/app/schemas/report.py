@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -25,6 +25,25 @@ class FundabilityAnalysis(BaseModel):
     summary: str = Field(description="Two to four sentence executive summary of the investment case.")
     red_flags: List[str] = Field(description="Critical risks, gaps or weaknesses. Each a single sentence.")
     green_flags: List[str] = Field(description="Key strengths and positive signals. Each a single sentence.")
+    # Confidence is about the EVIDENCE, not the verdict. A thin profile can be
+    # scored low with high confidence; what it cannot be is scored precisely.
+    # Without this a score read off two sentences looks as authoritative as one
+    # read off a full profile.
+    confidence: Literal["LOW", "MEDIUM", "HIGH"] = Field(
+        description=(
+            "How much of this profile was actually evidenced. HIGH: most claims "
+            "are specific and quantified. MEDIUM: the shape is clear but key "
+            "numbers are missing. LOW: too little to judge on, and the score is "
+            "closer to a guess."
+        )
+    )
+    top_fixes: List[str] = Field(
+        description=(
+            "Two to four changes that would move this score most, hardest-hitting "
+            "first. Each names the specific gap and what would close it. Not "
+            "generic advice."
+        )
+    )
 
 
 class InvestmentMemoSection(BaseModel):

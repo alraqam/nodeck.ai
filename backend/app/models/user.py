@@ -8,6 +8,8 @@ import enum
 class UserRole(str, enum.Enum):
     FOUNDER = "FOUNDER"
     INVESTOR = "INVESTOR"
+    # The paying customer in roadmap phases 0-2: screens a cohort of decks.
+    ACCELERATOR = "ACCELERATOR"
     ADMIN = "ADMIN"
 
 class User(Base):

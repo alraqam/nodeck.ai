@@ -29,34 +29,50 @@ router = APIRouter()
 # Every generation costs a real API call, so refuse to run one on a profile
 # with nothing in it. `if not sip_data` alone is not enough: {"identity": {}}
 # is truthy and would sail straight through.
-REQUIRED_FOR_ANALYSIS = [
-    (("problem", "description"), "Problem description"),
-    (("solution", "description"), "Solution description"),
-    (("market", "tam"), "Market TAM"),
+#
+# The bar is deliberately low: SOME description of the problem or the solution.
+# It used to also demand a TAM, which is wrong twice over. Real decks routinely
+# omit market sizing, so a cohort import would have been rejected wholesale on
+# a field the deck never claimed. And the prompt already treats a missing TAM
+# as a red flag - refusing to score it means the founder never hears that,
+# which is the one thing they needed to know.
+SCOREABLE_FIELDS = [
+    (("problem", "description"), "a description of the problem"),
+    (("solution", "description"), "a description of the solution"),
 ]
 
 GENERIC_FAILURE = "Generation failed. Please try again."
 
 
+def _has_text(sip_data: Optional[dict], section: str, field: str) -> bool:
+    value = ((sip_data or {}).get(section) or {})
+    if not isinstance(value, dict):
+        return False
+    text = value.get(field)
+    # A stray space is not an answer.
+    return bool(text) and bool(str(text).strip())
+
+
 def _missing_sections(sip_data: Optional[dict]) -> list[str]:
-    sip_data = sip_data or {}
-    missing = []
-    for (section, field), label in REQUIRED_FOR_ANALYSIS:
-        value = (sip_data.get(section) or {}).get(field)
-        if value in (None, "", [], {}):
-            missing.append(label)
-    return missing
+    """What is missing, or [] if there is enough to score.
+
+    Either field alone is enough. A profile with a problem but no solution is
+    worth scoring - badly, and the report will say why.
+    """
+    if any(_has_text(sip_data, section, field) for (section, field), _ in SCOREABLE_FIELDS):
+        return []
+    return [label for _, label in SCOREABLE_FIELDS]
 
 
-def _require_complete_sip(startup: Startup) -> None:
+def _require_scoreable_sip(startup: Startup) -> None:
     missing = _missing_sections(startup.sip_data)
     if missing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "Your Intelligence Profile is missing: "
-                + ", ".join(missing)
-                + ". Fill these in before running this."
+                "There is nothing here to analyse yet. Add "
+                + " or ".join(missing)
+                + " first."
             ),
         )
 
@@ -123,7 +139,7 @@ async def process_report(report_id: uuid.UUID) -> None:
         sip = StartupIntelligenceProfile(**(startup.sip_data or {}))
         if kind == ReportType.FUNDABILITY_SCORE.value:
             result_model = await ai_service.analyze_fundability(
-                sip, startup.name, startup.one_liner
+                sip, startup.name, startup.one_liner, startup.stage
             )
         elif kind == ReportType.INVESTMENT_MEMO.value:
             result_model = await ai_service.generate_memo(
@@ -236,7 +252,7 @@ async def trigger_fundability_analysis(
 ) -> Any:
     """Queue a fundability analysis. Poll GET /analysis/reports/{report_id}."""
     startup = await get_owned_startup(db, startup_id, current_user)
-    _require_complete_sip(startup)
+    _require_scoreable_sip(startup)
     return await _enqueue_report(db, startup, ReportType.FUNDABILITY_SCORE)
 
 
@@ -252,7 +268,7 @@ async def trigger_memo_generation(
 ) -> Any:
     """Queue an internal-style investment memo."""
     startup = await get_owned_startup(db, startup_id, current_user)
-    _require_complete_sip(startup)
+    _require_scoreable_sip(startup)
     return await _enqueue_report(db, startup, ReportType.INVESTMENT_MEMO)
 
 
@@ -268,7 +284,7 @@ async def trigger_deck_generation(
 ) -> Any:
     """Queue a pitch deck built FROM the profile - the deck as an output."""
     startup = await get_owned_startup(db, startup_id, current_user)
-    _require_complete_sip(startup)
+    _require_scoreable_sip(startup)
     return await _enqueue_report(db, startup, ReportType.PITCH_DECK)
 
 
@@ -307,7 +323,7 @@ async def create_investor_view(
 ) -> Any:
     """Retell the profile for one investor's thesis."""
     startup = await get_owned_startup(db, startup_id, current_user)
-    _require_complete_sip(startup)
+    _require_scoreable_sip(startup)
 
     view = InvestorView(
         startup_id=startup.id,

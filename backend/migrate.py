@@ -26,6 +26,7 @@ COLUMNS = [
     ("investor_views", "attempts", "INTEGER NOT NULL DEFAULT 0"),
     ("startups", "share_token", "VARCHAR"),
     ("startups", "share_score", "BOOLEAN NOT NULL DEFAULT false"),
+    ("startups", "cohort_id", "UUID REFERENCES cohorts(id)"),
 ]
 
 

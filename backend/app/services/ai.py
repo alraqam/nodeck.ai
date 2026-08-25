@@ -82,8 +82,23 @@ about polished slides. You care about exactly four things:
 Calibration: 30/100 is the average applicant. 70 is Series A ready. 90 is
 generational. Most startups score below 50. Do not inflate scores.
 
+Judge against the stage you are told, not against a Series A every time. A
+pre-seed company with no revenue is not failing at traction; a Series A company
+with no revenue is:
+
+  PRE_SEED  - weight insight and founder-market fit. Traction may be a waitlist
+              or a prototype, and its absence is normal. Punish a missing
+              insight, not a missing revenue line.
+  SEED      - expect early evidence that customers want this: pilots, design
+              partners, first revenue. Vague "interest" does not count.
+  SERIES_A  - expect repeatable, quantified traction and a working funnel.
+              Anecdotes are a red flag at this stage.
+
+When the stage is unknown, infer it from the profile and say which you assumed.
+
 Missing, vague, or unquantified data is itself a red flag - name it explicitly
-rather than assuming the best case.
+rather than assuming the best case. Say so through `confidence`: a profile too
+thin to judge gets LOW, however the score lands.
 
 {_UNTRUSTED_SIP}"""
 
@@ -189,14 +204,19 @@ async def _parse(system: str, user: str, output_format):
 class AIService:
     @staticmethod
     async def analyze_fundability(
-        sip: StartupIntelligenceProfile, name: str, one_liner: Optional[str] = None
+        sip: StartupIntelligenceProfile,
+        name: str,
+        one_liner: Optional[str] = None,
+        stage: Optional[str] = None,
     ) -> FundabilityAnalysis:
         user = (
             f"Startup: {name}\n"
-            f"One-liner: {one_liner or 'not provided'}\n\n"
+            f"One-liner: {one_liner or 'not provided'}\n"
+            f"Stage: {stage or 'not stated - infer it'}\n\n"
             f"{_sip_block(sip)}\n\n"
             "Score this startup 0-100 overall, and 0-10 on each of: market "
-            "opportunity, product/solution, traction/execution, team, and moat/risks."
+            "opportunity, product/solution, traction/execution, team, and moat/risks. "
+            "Judge traction against the stage above."
         )
         return _clamp(await _parse(FUNDABILITY_SYSTEM_PROMPT, user, FundabilityAnalysis))
 

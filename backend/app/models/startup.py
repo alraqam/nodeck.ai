@@ -19,6 +19,10 @@ class Startup(Base):
     # Storing the entire Intelligence Profile structure as JSONB for flexibility
     sip_data = Column(JSONB, nullable=True)
 
+    # Nullable: self-serve founders have no cohort, and must stay unaffected
+    # by anything the accelerator side does.
+    cohort_id = Column(UUID(as_uuid=True), ForeignKey("cohorts.id"), nullable=True, index=True)
+
     # Public sharing. Deliberately NOT keyed on `slug`: that is derived from
     # the company name and meant to be readable, so it is guessable. This is
     # a 128-bit secret, absent until the founder turns sharing on, and
