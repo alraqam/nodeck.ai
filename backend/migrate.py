@@ -20,6 +20,10 @@ COLUMNS = [
     ("startups", "stage", "VARCHAR"),
     ("startups", "industry", "VARCHAR[]"),
     ("reports", "score_summary", "JSONB"),
+    ("reports", "locked_at", "TIMESTAMPTZ"),
+    ("reports", "attempts", "INTEGER NOT NULL DEFAULT 0"),
+    ("investor_views", "locked_at", "TIMESTAMPTZ"),
+    ("investor_views", "attempts", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 

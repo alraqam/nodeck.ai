@@ -67,8 +67,8 @@ No route has a trailing slash.
 
 ### Generation
 
-All three return `202` with a `report_id` and run in the background. Poll the
-report until it leaves `PENDING`. Each requires a problem description, a
+All three return `202` with a `report_id` and are picked up by the job worker
+(`app/services/worker.py`). Poll the report until it leaves `PENDING`. Each requires a problem description, a
 solution description and a TAM — the call costs real money, so an empty
 profile is rejected with a `400` naming what is missing.
 

@@ -94,6 +94,14 @@ client polls. The one exception is PDF import, which runs inline because the
 founder is watching the upload and needs to know which fields were filled
 before deciding what to type next.
 
+**The queue is the database.** A report row *is* its own job record, so a
+claim is as durable as the data. A worker takes a job by stamping `locked_at`;
+if that worker dies, the lease goes stale and the next worker picks the job up
+again. Postgres already provides `FOR UPDATE SKIP LOCKED`, which is exactly
+the primitive a queue needs — no broker, no second service, and a job survives
+a restart, a crash or a deploy. Jobs that fail repeatedly are abandoned rather
+than retried forever.
+
 ## Design decisions worth knowing
 
 **The SIP is JSONB, not tables.** The profile's shape is still moving. Core
@@ -133,7 +141,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend  && python -m pytest      # 37 tests
+cd backend && python -m pytest       # 47 tests
 cd frontend && npm test              # 28 tests
 ```
 
@@ -148,9 +156,9 @@ An MVP. Known gaps, in rough priority order:
 
 - **No Alembic.** `migrate.py` holds additive DDL by hand. Adopt real
   migrations before there is data worth keeping.
-- **Background tasks are in-process.** FastAPI `BackgroundTasks`, not a queue —
-  a restart mid-generation loses the job and leaves the report on `PENDING`.
-  The architecture calls for Celery or ARQ.
+- **The workers run inside the API process.** Durable, but they compete with
+  request handling for the event loop. Moving them to their own process needs
+  no change to the queue itself.
 - **No refresh tokens.** Access tokens are long-lived instead.
 - **`INVESTOR` and `ADMIN` roles exist but are unused.** Every registration
   creates a `FOUNDER`.

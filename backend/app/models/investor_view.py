@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -28,6 +28,10 @@ class InvestorView(Base):
     # both with the same logic.
     status = Column(String, nullable=False, default="PENDING")
     content = Column(JSONB, nullable=True)
+
+    # Same job-queue bookkeeping as reports; see app/models/report.py.
+    locked_at = Column(DateTime(timezone=True), nullable=True)
+    attempts = Column(Integer, nullable=False, server_default="0")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

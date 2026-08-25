@@ -1,8 +1,8 @@
 import logging
 import uuid
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -61,13 +61,21 @@ def _require_complete_sip(startup: Startup) -> None:
         )
 
 
+# --- Job processing -------------------------------------------------------
+#
+# These are called by the worker (app/services/worker.py) with nothing but an
+# id, so everything else is loaded here. That is deliberate: a job must be
+# runnable from the row alone, or it could not survive the restart that
+# in-memory background tasks did not.
+
+
 async def _finish_report(
     report_id: uuid.UUID,
     status_value: str,
     content: dict,
     score_summary: Optional[dict] = None,
 ) -> None:
-    """Write the terminal state in its own session.
+    """Write the terminal state in its own session, and release the lease.
 
     The failure path must not reuse the session the generation ran under: once
     a transaction has errored, further statements on it are rejected, so the
@@ -82,37 +90,67 @@ async def _finish_report(
             return
         report.status = status_value
         report.content = content
+        report.locked_at = None
         if score_summary is not None:
             report.score_summary = score_summary
         db.add(report)
         await db.commit()
 
 
-async def process_report(
-    report_id: uuid.UUID,
-    generate: Callable[[StartupIntelligenceProfile], Awaitable[Any]],
-    sip_data: dict,
-    kind: str,
-) -> None:
-    """Run one generation and record its outcome.
+async def process_report(report_id: uuid.UUID) -> None:
+    """Generate one report. Dispatches on the row's own type.
 
     Shared by all three report types: they differ only in which AI call runs
-    and whether a score falls out of the result, so the transaction handling,
-    error masking and PENDING-resolution live here once.
+    and whether a score falls out of the result, so transaction handling, error
+    masking and PENDING-resolution live here once.
     """
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Report, Startup)
+            .join(Startup, Report.startup_id == Startup.id)
+            .where(Report.id == report_id)
+        )
+        row = result.first()
+
+    if row is None:
+        logger.error("report %s no longer exists; nothing to generate", report_id)
+        return
+
+    report, startup = row
+    kind = report.type
+
     try:
-        sip = StartupIntelligenceProfile(**(sip_data or {}))
-        result = await generate(sip)
+        sip = StartupIntelligenceProfile(**(startup.sip_data or {}))
+        if kind == ReportType.FUNDABILITY_SCORE.value:
+            result_model = await ai_service.analyze_fundability(
+                sip, startup.name, startup.one_liner
+            )
+        elif kind == ReportType.INVESTMENT_MEMO.value:
+            result_model = await ai_service.generate_memo(
+                sip, startup.name, startup.one_liner
+            )
+        elif kind == ReportType.PITCH_DECK.value:
+            result_model = await ai_service.generate_deck(
+                sip, startup.name, startup.one_liner
+            )
+        else:
+            logger.error("report %s has unknown type %r", report_id, kind)
+            await _finish_report(
+                report_id, ReportStatus.FAILED.value, {"error": GENERIC_FAILURE}
+            )
+            return
     except Exception:
         # Log the detail, store a generic message: str(exc) can carry an API
         # key fragment or a full DSN into a JSONB column the frontend renders.
         logger.exception("%s failed for report %s", kind, report_id)
-        await _finish_report(report_id, ReportStatus.FAILED.value, {"error": GENERIC_FAILURE})
+        await _finish_report(
+            report_id, ReportStatus.FAILED.value, {"error": GENERIC_FAILURE}
+        )
         return
 
-    content = result.model_dump(mode="json")
-    # Denormalised so the history list can show scores without loading every
-    # full report body.
+    content = result_model.model_dump(mode="json")
+    # Denormalised so the history list and dashboard can show scores without
+    # loading every full report body.
     summary = (
         {"total_score": content["total_score"], "breakdown": content["breakdown"]}
         if kind == ReportType.FUNDABILITY_SCORE.value
@@ -121,13 +159,60 @@ async def process_report(
     await _finish_report(report_id, ReportStatus.COMPLETED.value, content, summary)
 
 
-async def _queue_report(
-    db: AsyncSession,
-    background_tasks: BackgroundTasks,
-    startup: Startup,
-    report_type: ReportType,
-    generate: Callable[[StartupIntelligenceProfile], Awaitable[Any]],
+async def _finish_view(view_id: uuid.UUID, status_value: str, content: dict) -> None:
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(InvestorView).filter(InvestorView.id == view_id))
+        view = result.scalars().first()
+        if not view:
+            logger.error("investor view %s vanished before it could be finalised", view_id)
+            return
+        view.status = status_value
+        view.content = content
+        view.locked_at = None
+        db.add(view)
+        await db.commit()
+
+
+async def process_investor_view(view_id: uuid.UUID) -> None:
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(InvestorView, Startup)
+            .join(Startup, InvestorView.startup_id == Startup.id)
+            .where(InvestorView.id == view_id)
+        )
+        row = result.first()
+
+    if row is None:
+        logger.error("investor view %s no longer exists", view_id)
+        return
+
+    view, startup = row
+    try:
+        sip = StartupIntelligenceProfile(**(startup.sip_data or {}))
+        result_model = await ai_service.generate_investor_view(
+            sip, startup.name, view.investor_name, view.investor_thesis
+        )
+    except Exception:
+        logger.exception("investor view failed for %s", view_id)
+        await _finish_view(view_id, ReportStatus.FAILED.value, {"error": GENERIC_FAILURE})
+        return
+
+    await _finish_view(
+        view_id, ReportStatus.COMPLETED.value, result_model.model_dump(mode="json")
+    )
+
+
+# --- Enqueueing -----------------------------------------------------------
+
+
+async def _enqueue_report(
+    db: AsyncSession, startup: Startup, report_type: ReportType
 ) -> dict:
+    """Create the PENDING row and return. The worker picks it up from there.
+
+    Nothing is scheduled in-process on purpose - the row is the job, so the
+    work survives this process dying a millisecond from now.
+    """
     report = Report(
         startup_id=startup.id,
         type=report_type.value,
@@ -136,10 +221,6 @@ async def _queue_report(
     db.add(report)
     await db.commit()
     await db.refresh(report)
-
-    background_tasks.add_task(
-        process_report, report.id, generate, startup.sip_data, report_type.value
-    )
     return {"report_id": report.id, "status": ReportStatus.PENDING.value}
 
 
@@ -150,20 +231,13 @@ async def _queue_report(
 )
 async def trigger_fundability_analysis(
     startup_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """Queue a fundability analysis. Poll GET /analysis/reports/{report_id}."""
     startup = await get_owned_startup(db, startup_id, current_user)
     _require_complete_sip(startup)
-    return await _queue_report(
-        db,
-        background_tasks,
-        startup,
-        ReportType.FUNDABILITY_SCORE,
-        lambda sip: ai_service.analyze_fundability(sip, startup.name, startup.one_liner),
-    )
+    return await _enqueue_report(db, startup, ReportType.FUNDABILITY_SCORE)
 
 
 @router.post(
@@ -173,20 +247,13 @@ async def trigger_fundability_analysis(
 )
 async def trigger_memo_generation(
     startup_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """Queue an internal-style investment memo."""
     startup = await get_owned_startup(db, startup_id, current_user)
     _require_complete_sip(startup)
-    return await _queue_report(
-        db,
-        background_tasks,
-        startup,
-        ReportType.INVESTMENT_MEMO,
-        lambda sip: ai_service.generate_memo(sip, startup.name, startup.one_liner),
-    )
+    return await _enqueue_report(db, startup, ReportType.INVESTMENT_MEMO)
 
 
 @router.post(
@@ -196,20 +263,13 @@ async def trigger_memo_generation(
 )
 async def trigger_deck_generation(
     startup_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """Queue a pitch deck built FROM the profile - the deck as an output."""
     startup = await get_owned_startup(db, startup_id, current_user)
     _require_complete_sip(startup)
-    return await _queue_report(
-        db,
-        background_tasks,
-        startup,
-        ReportType.PITCH_DECK,
-        lambda sip: ai_service.generate_deck(sip, startup.name, startup.one_liner),
-    )
+    return await _enqueue_report(db, startup, ReportType.PITCH_DECK)
 
 
 @router.get("/reports/{report_id}", response_model=ReportOut)
@@ -234,39 +294,6 @@ async def get_report(
 # --- Investor views -------------------------------------------------------
 
 
-async def _finish_view(view_id: uuid.UUID, status_value: str, content: dict) -> None:
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(InvestorView).filter(InvestorView.id == view_id))
-        view = result.scalars().first()
-        if not view:
-            logger.error("investor view %s vanished before it could be finalised", view_id)
-            return
-        view.status = status_value
-        view.content = content
-        db.add(view)
-        await db.commit()
-
-
-async def process_investor_view(
-    view_id: uuid.UUID,
-    sip_data: dict,
-    name: str,
-    investor_name: str,
-    investor_thesis: Optional[str],
-) -> None:
-    try:
-        sip = StartupIntelligenceProfile(**(sip_data or {}))
-        result = await ai_service.generate_investor_view(
-            sip, name, investor_name, investor_thesis
-        )
-    except Exception:
-        logger.exception("investor view failed for %s", view_id)
-        await _finish_view(view_id, ReportStatus.FAILED.value, {"error": GENERIC_FAILURE})
-        return
-
-    await _finish_view(view_id, ReportStatus.COMPLETED.value, result.model_dump(mode="json"))
-
-
 @router.post(
     "/{startup_id}/investor-views",
     response_model=InvestorViewTriggerResponse,
@@ -275,7 +302,6 @@ async def process_investor_view(
 async def create_investor_view(
     startup_id: uuid.UUID,
     view_in: InvestorViewCreate,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
@@ -292,15 +318,6 @@ async def create_investor_view(
     db.add(view)
     await db.commit()
     await db.refresh(view)
-
-    background_tasks.add_task(
-        process_investor_view,
-        view.id,
-        startup.sip_data,
-        startup.name,
-        view.investor_name,
-        view.investor_thesis,
-    )
     return {"view_id": view.id, "status": ReportStatus.PENDING.value}
 
 
