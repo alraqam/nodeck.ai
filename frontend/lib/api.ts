@@ -2,9 +2,11 @@ import type {
   DeckUploadResult,
   FundabilityAnalysis,
   InvestorView,
+  PublicProfile,
   Report,
   SIP,
   Stage,
+  ShareSettings,
   Startup,
   StartupSummary,
   User,
@@ -161,6 +163,25 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  getShare: (id: string) => request<ShareSettings>(`/startups/${id}/share`),
+
+  /** Also rotates: calling it again mints a new token and kills the old link. */
+  enableShare: (id: string) =>
+    request<ShareSettings>(`/startups/${id}/share`, { method: "POST" }),
+
+  updateShare: (id: string, body: { include_score: boolean }) =>
+    request<ShareSettings>(`/startups/${id}/share`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  disableShare: (id: string) =>
+    request<ShareSettings>(`/startups/${id}/share`, { method: "DELETE" }),
+
+  /** No auth. A missing, revoked or malformed token is the same 404. */
+  getPublicProfile: (token: string) =>
+    request<PublicProfile>(`/public/${encodeURIComponent(token)}`),
+
   listReports: (id: string) => request<Report[]>(`/startups/${id}/reports`),
 
   analyze: (id: string) => triggerReport(id, "fundability"),
@@ -185,6 +206,7 @@ export const api = {
 export type {
   FundabilityAnalysis,
   InvestorView,
+  PublicProfile,
   Report,
   Startup,
   StartupSummary,

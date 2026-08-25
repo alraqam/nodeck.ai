@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, String, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
@@ -18,6 +18,16 @@ class Startup(Base):
     industry = Column(ARRAY(String), nullable=True)
     # Storing the entire Intelligence Profile structure as JSONB for flexibility
     sip_data = Column(JSONB, nullable=True)
+
+    # Public sharing. Deliberately NOT keyed on `slug`: that is derived from
+    # the company name and meant to be readable, so it is guessable. This is
+    # a 128-bit secret, absent until the founder turns sharing on, and
+    # discarded when they turn it off - revoking a link must actually revoke
+    # it, not merely hide it.
+    share_token = Column(String, unique=True, index=True, nullable=True)
+    # Whether the shared page includes the fundability score. Off by default:
+    # a founder sharing with an investor is sharing a pitch, not a critique.
+    share_score = Column(Boolean, nullable=False, server_default="false")
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

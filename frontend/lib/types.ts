@@ -74,6 +74,8 @@ export interface StartupSummary {
 }
 
 export interface Startup extends StartupSummary {
+  share_token?: string | null
+  share_score?: boolean
   founder_id: string
   sip_data?: Partial<SIP> | null
   updated_at?: string | null
@@ -157,6 +159,36 @@ export interface InvestorView {
   status: ReportStatus
   content?: (Partial<InvestorViewContent> & { error?: string }) | null
   created_at: string
+}
+
+export interface ShareSettings {
+  enabled: boolean
+  share_token?: string | null
+  include_score: boolean
+}
+
+/** The curated shape the unauthenticated endpoint returns. Intentionally NOT
+ *  `Startup` — it is a different, much smaller thing, and typing it as the
+ *  full model would invite reading fields the server never sends. */
+export interface PublicProfile {
+  name?: string | null
+  one_liner?: string | null
+  stage?: string | null
+  industry: string[]
+  identity: Partial<Pick<Identity, "website" | "location" | "founded_year">>
+  problem: Partial<Problem>
+  solution: Partial<Solution>
+  market: Partial<Market>
+  traction: Partial<Traction>
+  team: Partial<TeamMember>[]
+  fundraising: Partial<Pick<Fundraising, "round_stage" | "ask_amount" | "use_of_funds">>
+  /** Present only if the founder opted in. Never carries red flags. */
+  score?: {
+    total_score?: number
+    breakdown?: ScoreBreakdown
+    summary?: string
+    green_flags?: string[]
+  } | null
 }
 
 export interface DeckUploadResult {

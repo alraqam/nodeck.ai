@@ -24,6 +24,8 @@ COLUMNS = [
     ("reports", "attempts", "INTEGER NOT NULL DEFAULT 0"),
     ("investor_views", "locked_at", "TIMESTAMPTZ"),
     ("investor_views", "attempts", "INTEGER NOT NULL DEFAULT 0"),
+    ("startups", "share_token", "VARCHAR"),
+    ("startups", "share_score", "BOOLEAN NOT NULL DEFAULT false"),
 ]
 
 
@@ -37,6 +39,17 @@ async def main() -> None:
                 text(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS "{column}" {coltype}')
             )
             print(f"  ok  {table}.{column} ({coltype})")
+
+        # share_token is looked up on every public page load, and must be
+        # unique - a collision would serve one founder's profile under
+        # another's link.
+        await conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_startups_share_token"
+                " ON startups (share_token)"
+            )
+        )
+        print("  ok  unique index on startups.share_token")
 
         # Backfill score_summary for reports scored before the column existed,
         # so history rows do not render as blank.

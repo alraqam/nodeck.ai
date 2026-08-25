@@ -1,5 +1,6 @@
 import logging
 import re
+import secrets
 import uuid
 from typing import Any, List
 
@@ -271,3 +272,84 @@ async def upload_deck(
     await db.commit()
 
     return {"status": "completed", "fields_filled": filled, "notes": parsed.notes}
+
+
+# --- Public sharing -------------------------------------------------------
+
+
+def _share_settings(startup: Startup) -> dict:
+    return {
+        "enabled": startup.share_token is not None,
+        "share_token": startup.share_token,
+        "include_score": bool(startup.share_score),
+    }
+
+
+@router.get("/{startup_id}/share", response_model=startup_schema.ShareSettings)
+async def get_share_settings(
+    startup_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    startup = await get_owned_startup(db, startup_id, current_user)
+    return _share_settings(startup)
+
+
+@router.post("/{startup_id}/share", response_model=startup_schema.ShareSettings)
+async def enable_sharing(
+    startup_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Turn sharing on, or rotate the link if it is already on.
+
+    Calling this again always mints a new token, which is how a founder revokes
+    a link they have already sent: the old URL stops resolving immediately.
+    """
+    startup = await get_owned_startup(db, startup_id, current_user)
+    # 32 bytes -> a 43-character URL-safe secret. The link IS the credential,
+    # so it has to be long enough that guessing is hopeless.
+    startup.share_token = secrets.token_urlsafe(32)
+    db.add(startup)
+    await db.commit()
+    await db.refresh(startup)
+    logger.info("sharing enabled for startup %s", startup.id)
+    return _share_settings(startup)
+
+
+@router.patch("/{startup_id}/share", response_model=startup_schema.ShareSettings)
+async def update_share_settings(
+    startup_id: uuid.UUID,
+    share_in: startup_schema.ShareUpdate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Change what a live link exposes, without rotating it."""
+    startup = await get_owned_startup(db, startup_id, current_user)
+    if share_in.include_score is not None:
+        startup.share_score = share_in.include_score
+    db.add(startup)
+    await db.commit()
+    await db.refresh(startup)
+    return _share_settings(startup)
+
+
+@router.delete("/{startup_id}/share", response_model=startup_schema.ShareSettings)
+async def disable_sharing(
+    startup_id: uuid.UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
+) -> Any:
+    """Revoke the link.
+
+    The token is discarded rather than flagged, so a revoked URL cannot be
+    resurrected and nothing is left in the row for a later bug to expose.
+    """
+    startup = await get_owned_startup(db, startup_id, current_user)
+    startup.share_token = None
+    startup.share_score = False
+    db.add(startup)
+    await db.commit()
+    await db.refresh(startup)
+    logger.info("sharing revoked for startup %s", startup.id)
+    return _share_settings(startup)

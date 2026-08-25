@@ -130,6 +130,19 @@ class StartupUpdate(BaseModel):
     industry: Optional[List[str]] = None
 
 
+class ShareSettings(BaseModel):
+    """What the founder controls about a shared link."""
+
+    enabled: bool
+    # Absent when sharing is off - there is no token to hand back.
+    share_token: Optional[str] = None
+    include_score: bool = False
+
+
+class ShareUpdate(BaseModel):
+    include_score: Optional[bool] = None
+
+
 class StartupSummary(StartupBase):
     """List view - omits the (potentially large) SIP blob."""
 
@@ -147,6 +160,8 @@ class Startup(StartupBase):
     id: uuid.UUID
     founder_id: uuid.UUID
     slug: Optional[str] = None
+    share_token: Optional[str] = None
+    share_score: bool = False
     # Loosely typed on the way out; strictly validated on the way in.
     sip_data: Optional[Dict[str, Any]] = None
     created_at: datetime

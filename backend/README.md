@@ -87,6 +87,20 @@ profile is rejected with a `400` naming what is missing.
 | GET | `/api/v1/analysis/{id}/investor-views` | newest first |
 | GET | `/api/v1/analysis/investor-views/{id}` | poll for COMPLETED / FAILED |
 
+### Sharing
+
+| Method | Path | |
+|---|---|---|
+| GET | `/api/v1/startups/{id}/share` | current settings |
+| POST | `/api/v1/startups/{id}/share` | enable, or rotate an existing link |
+| PATCH | `/api/v1/startups/{id}/share` | toggle whether the score is included |
+| DELETE | `/api/v1/startups/{id}/share` | revoke; the token is discarded |
+| GET | `/api/v1/public/{share_token}` | **no authentication** |
+
+The public route is the only unauthenticated one. It emits a hand-written
+whitelist, never a reflected model, and answers a revoked token exactly as it
+answers one that never existed.
+
 ## Ownership
 
 Every startup route resolves through `get_owned_startup()`: `404` if it does

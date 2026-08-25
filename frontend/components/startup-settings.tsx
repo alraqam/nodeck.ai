@@ -10,6 +10,7 @@ import { api, ApiError } from "@/lib/api"
 import type { Stage, Startup } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { ShareSettings } from "@/components/share-settings"
 import { Loader2, Trash2 } from "lucide-react"
 
 const STAGES: { value: Stage; label: string }[] = [
@@ -141,6 +142,8 @@ export function StartupSettings({
                     </form>
                 </CardContent>
             </Card>
+
+            <ShareSettings startupId={startup.id} />
 
             <Card className="border-destructive/30">
                 <CardContent className="space-y-4 p-5">

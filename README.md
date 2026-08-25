@@ -26,6 +26,7 @@ specific investor's thesis.
 | **Pitch deck** | 10–12 slides with speaker notes, built from the profile. Nothing is invented — a gap stays visible. |
 | **Investor views** | The profile retold for one investor's thesis. Emphasis changes; facts never do. |
 | **Deck import** | Upload an existing PDF deck and it fills in the blanks of your profile. |
+| **Share links** | A read-only public URL for an investor. Off by default, revocable, and it never carries your red flags. |
 
 ## Stack
 
@@ -120,6 +121,15 @@ empty profile scores badly instead of scoring well by omission.
 so every prompt wraps it in tags and states that tagged content is data, never
 instructions.
 
+**A share link exposes the pitch, never the critique.** The public endpoint
+names every field it emits rather than reflecting the model, so a new column or
+a new SIP section is invisible there until someone deliberately exposes it. Red
+flags, the memo and investor views are the founder's own diagnosis of their
+weaknesses — sharing a link must not hand those to the person they are
+pitching. The link is a 128-bit token rather than the readable slug, sharing is
+off until switched on, and revoking discards the token so the URL genuinely
+stops working.
+
 **Errors never leak internals.** A failed generation stores a generic message;
 the detail goes to the log. `str(exception)` can carry an API key fragment or a
 full connection string into a column the frontend renders.
@@ -141,14 +151,19 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend && python -m pytest       # 47 tests
+cd backend && python -m pytest       # 72 tests
 cd frontend && npm test              # 28 tests
 ```
 
-Neither suite needs an API key or a database — they cover the logic that has
-teeth: the deck-merge guarantee that founder input is never overwritten, the
-completeness gate that stops a paid call on an empty profile, score clamping,
-and the export serialisers.
+Neither suite needs an API key. The backend creates its own `nodeck_test`
+database on demand — pointing tests at the development one lets the running job
+worker race them for rows.
+
+They cover the logic that has teeth rather than chasing coverage: the
+deck-merge guarantee that founder input is never overwritten, the completeness
+gate that stops a paid call on an empty profile, the job claim (that two
+workers never get the same row, that a dead worker's lease is reclaimed), and
+what the public share payload must never contain.
 
 ## Status
 
