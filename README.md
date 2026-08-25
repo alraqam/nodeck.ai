@@ -54,7 +54,7 @@ python -m venv .venv
 .venv/Scripts/activate          # Windows; source .venv/bin/activate on POSIX
 pip install -r requirements.txt
 
-cp .env.example .env            # then fill in SECRET_KEY and ANTHROPIC_API_KEY
+cp .env.example .env            # SECRET_KEY is required; see the note below
 python init_db.py               # create the tables
 python migrate.py               # apply additive column changes
 
@@ -62,6 +62,12 @@ uvicorn app.main:app --port 8000
 ```
 
 API docs at http://127.0.0.1:8000/api/v1/docs
+
+> `SECRET_KEY` has no default and the app refuses to start without a real one.
+> That is deliberate: a placeholder signing key lets anyone mint a valid
+> session token for any account, and it fails silently — everything works, and
+> every session is forgeable. Generate one with
+> `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
 
 **3. Frontend**
 
@@ -167,7 +173,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend && python -m pytest       # 97 tests
+cd backend && python -m pytest       # 118 tests
 cd frontend && npm test              # 43 tests
 ```
 

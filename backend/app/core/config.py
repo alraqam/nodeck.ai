@@ -8,6 +8,26 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 
 
+# Values that have appeared in this repo or in setup instructions, plus the
+# obvious hand-typed ones. Any of these means the key is public knowledge.
+WEAK_SECRETS = frozenset(
+    {
+        "change_me",
+        "changeme",
+        "secret",
+        "password",
+        "test",
+        "changethis",
+        "change_me_in_prod_to_a_super_secret_key",
+        "your-secret-key",
+    }
+)
+
+_GENERATE_HINT = (
+    'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+)
+
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "NoDeck API"
     API_V1_STR: str = "/api/v1"
@@ -44,7 +64,11 @@ class Settings(BaseSettings):
     TRUST_PROXY_HEADERS: bool = False
 
     # Auth
-    SECRET_KEY: str = "CHANGE_ME_IN_PROD_TO_A_SUPER_SECRET_KEY"
+    # No default. A placeholder here is worse than no value at all: the app
+    # boots, everything works, and every token is forgeable by anyone who has
+    # read this file. Failing to start is the only outcome that cannot be
+    # missed.
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
@@ -53,6 +77,27 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-opus-5"
     ANTHROPIC_MAX_TOKENS: int = 16000
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def secret_key_must_be_real(cls, v: str) -> str:
+        """Refuse to start on a guessable signing key.
+
+        With a known key anyone can mint a valid token for any account without
+        a password. There is no partial failure to fall back on and nothing
+        visible to warn about, so this has to stop the process.
+        """
+        if v.strip().lower() in WEAK_SECRETS:
+            raise ValueError(
+                "SECRET_KEY is a known placeholder, so every session token would "
+                f"be forgeable. Generate one with: {_GENERATE_HINT}"
+            )
+        if len(v) < 32:
+            raise ValueError(
+                f"SECRET_KEY is {len(v)} characters; use at least 32. "
+                f"Generate one with: {_GENERATE_HINT}"
+            )
+        return v
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
