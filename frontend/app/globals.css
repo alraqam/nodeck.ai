@@ -29,9 +29,12 @@
   --popover: #FFFFFF;
   --popover-foreground: #15161A;
 
-  /* Deepened amber: readable as text on paper. Filled buttons still carry the
-     true brand amber via --brand below. */
-  --primary: #96650B;
+  /* Deepened amber: readable as text on paper. Filled buttons still carry
+     the true brand amber via --brand below.
+     #96650B was not deep enough - measured 4.25:1 on its own tinted badge
+     background, which is under AA. This is 4.85:1 there and 5.56:1 as
+     plain text. */
+  --primary: #8A5C08;
   --primary-foreground: #FFFFFF;
 
   --brand: #F5A524;

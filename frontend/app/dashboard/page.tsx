@@ -134,7 +134,7 @@ export default function DashboardPage() {
                                                 {s.latest_score}
                                             </span>
                                         ) : (
-                                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" />
+                                            <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                                         )}
                                     </div>
                                     <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                                         {s.industry?.slice(0, 2).map((tag) => (
                                             <Badge key={tag}>{tag}</Badge>
                                         ))}
-                                        <span className="ml-auto font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted-foreground/60">
+                                        <span className="ml-auto font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted-foreground">
                                             {new Date(s.created_at).toLocaleDateString(undefined, {
                                                 day: "2-digit",
                                                 month: "short",

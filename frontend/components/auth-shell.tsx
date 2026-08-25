@@ -39,7 +39,7 @@ export function AuthShell({
                     </p>
                 </div>
 
-                <p className="relative font-mono text-xs tracking-wide text-muted-foreground/70">
+                <p className="relative font-mono text-xs tracking-wide text-muted-foreground">
                     30 average &middot; 70 Series A ready &middot; 90 generational
                 </p>
             </aside>

@@ -60,7 +60,7 @@ export default function Home() {
                             </Link>
                         </div>
 
-                        <p className="mt-5 font-mono text-xs tracking-wide text-muted-foreground/70">
+                        <p className="mt-5 font-mono text-xs tracking-wide text-muted-foreground">
                             30 is the average applicant &middot; 70 is Series A ready
                         </p>
                     </div>

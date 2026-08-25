@@ -140,8 +140,13 @@ stops working.
 primitives carried focus styling, so every link and hand-rolled button was
 invisible to keyboard navigation. A single `:focus-visible` rule now covers
 anything focusable; components that draw their own ring opt out with
-`outline-none` rather than stacking two indicators. Measured, both themes: no
-WCAG AA contrast failures.
+`outline-none` rather than stacking two indicators.
+
+Contrast is measured across every route in both themes, resolving oklab and
+compositing translucent layers rather than eyeballing hex values. The one
+remaining shortfall is the amber `AI` in the wordmark on light backgrounds:
+that is a logotype, exempt under WCAG 1.4.3, and it matches the official
+light logo in the brand kit.
 
 **Auth answers in the same time whether or not you exist.** Login returned a
 uniform error message but only ran Argon2 when it found a user, so an unknown

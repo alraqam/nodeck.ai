@@ -87,7 +87,7 @@ function SlideCard({
         <Card className="flex flex-col overflow-hidden">
             {/* 16:9 so the card reads as a slide rather than a list item. */}
             <CardContent className="flex aspect-[16/9] flex-col p-6">
-                <span className="font-mono text-[0.6875rem] tracking-[0.12em] text-muted-foreground/60">
+                <span className="font-mono text-[0.6875rem] tracking-[0.12em] text-muted-foreground">
                     {String(index + 1).padStart(2, "0")}
                 </span>
                 <h3 className="mt-2 text-lg font-semibold leading-tight tracking-tight text-balance">

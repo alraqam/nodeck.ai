@@ -104,7 +104,7 @@ export function ReportViewer({ report }: { report: Report }) {
                             >
                                 {score}
                             </span>
-                            <span className="font-mono text-2xl leading-none text-muted-foreground/50">
+                            <span className="font-mono text-2xl leading-none text-muted-foreground">
                                 /100
                             </span>
                         </div>
@@ -135,7 +135,7 @@ export function ReportViewer({ report }: { report: Report }) {
                                                     )}
                                                 >
                                                     {value}
-                                                    <span className="text-muted-foreground/40">/10</span>
+                                                    <span className="text-muted-foreground">/10</span>
                                                 </span>
                                             </div>
                                             {/* Ten discrete cells, not a continuous bar: the score is
@@ -151,7 +151,7 @@ export function ReportViewer({ report }: { report: Report }) {
                                                     />
                                                 ))}
                                             </div>
-                                            <p className="text-xs text-muted-foreground/70">{hint}</p>
+                                            <p className="text-xs text-muted-foreground">{hint}</p>
                                         </div>
                                     )
                                 })}

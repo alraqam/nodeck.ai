@@ -149,7 +149,7 @@ export function SharedProfile({ profile }: { profile: PublicProfile }) {
                                     >
                                         {score.total_score}
                                     </span>
-                                    <span className="font-mono text-xl text-muted-foreground/50">
+                                    <span className="font-mono text-xl text-muted-foreground">
                                         /100
                                     </span>
                                 </div>
@@ -167,7 +167,7 @@ export function SharedProfile({ profile }: { profile: PublicProfile }) {
                                                 </span>
                                                 <span className="font-mono text-sm tabular">
                                                     {score.breakdown![key]}
-                                                    <span className="text-muted-foreground/40">/10</span>
+                                                    <span className="text-muted-foreground">/10</span>
                                                 </span>
                                             </div>
                                         ))}

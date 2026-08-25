@@ -230,7 +230,7 @@ export default function StartupDetailPage() {
                                         )}
                                     >
                                         {r.score_summary.total_score}
-                                        <span className="text-muted-foreground/40">/100</span>
+                                        <span className="text-muted-foreground">/100</span>
                                     </span>
                                 )}
                             </CardContent>

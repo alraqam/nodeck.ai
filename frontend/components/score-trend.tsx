@@ -114,7 +114,7 @@ export function ScoreTrend({ reports }: { reports: Report[] }) {
                                 )
                             })}
                         </div>
-                        <div className="flex justify-between font-mono text-[0.6875rem] text-muted-foreground/70">
+                        <div className="flex justify-between font-mono text-[0.6875rem] text-muted-foreground">
                             <span>
                                 {runs.length} run{runs.length === 1 ? "" : "s"}
                             </span>

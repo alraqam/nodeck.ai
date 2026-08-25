@@ -156,7 +156,7 @@ function Prose({ children }: { children?: string | null }) {
 }
 
 function Empty() {
-    return <p className="text-sm text-muted-foreground/60">Not filled in yet.</p>
+    return <p className="text-sm text-muted-foreground">Not filled in yet.</p>
 }
 
 function Chips({ items }: { items?: string[] | null }) {
