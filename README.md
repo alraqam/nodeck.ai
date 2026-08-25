@@ -26,7 +26,7 @@ specific investor's thesis.
 | **Pitch deck** | 10–12 slides with speaker notes, built from the profile. Nothing is invented — a gap stays visible. |
 | **Investor views** | The profile retold for one investor's thesis. Emphasis changes; facts never do. |
 | **Deck import** | Upload an existing PDF deck and it fills in the blanks of your profile. |
-| **Share links** | A read-only public URL for an investor. Off by default, revocable, and it never carries your red flags. |
+| **Share links** | A read-only public URL for an investor. Off by default, revocable, server-rendered so it unfurls properly in chat and email, and it never carries your red flags. |
 
 ## Stack
 
@@ -151,7 +151,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend && python -m pytest       # 72 tests
+cd backend && python -m pytest       # 83 tests
 cd frontend && npm test              # 28 tests
 ```
 

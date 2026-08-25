@@ -20,16 +20,36 @@ stricter than elsewhere:
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.api import deps
+from app.core.ratelimit import SlidingWindowLimiter
 from app.models.report import Report, ReportStatus, ReportType
+from app.core.config import settings
 from app.models.startup import Startup
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Generous for a human opening a link they were sent, tight enough that
+# nobody scans this route for free. Applied per client address.
+_limiter = SlidingWindowLimiter(limit=60, window_seconds=60.0)
+
+
+def _client_key(request: Request) -> str:
+    """Identify the caller for rate limiting.
+
+    X-Forwarded-For is trusted only when a proxy is expected to set it. It
+    is client-controlled, so behind no proxy it would let anyone mint a
+    fresh identity per request and bypass the limit entirely.
+    """
+    if settings.TRUST_PROXY_HEADERS:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 def _pick(source: Optional[dict], *fields: str) -> dict:
@@ -100,12 +120,21 @@ def _public_profile(startup: Startup, score: Optional[dict]) -> dict:
 @router.get("/{share_token}")
 async def read_shared_profile(
     share_token: str,
+    request: Request,
     response: Response,
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """Fetch a shared profile. No authentication."""
     # Search engines must not index a link the founder shared with one investor.
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
+
+    key = _client_key(request)
+    if not _limiter.allow(key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests. Please slow down.",
+            headers={"Retry-After": str(_limiter.retry_after(key))},
+        )
 
     # Length-guard before touching the database: a token is a fixed-size secret,
     # so anything else is noise and should not cost a query.

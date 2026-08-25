@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
     SQL_ECHO: bool = False
 
+    # Set to true ONLY when the app sits behind a proxy that overwrites
+    # X-Forwarded-For. The header is client-controlled, so trusting it
+    # without a proxy in front lets anyone forge a new identity per request
+    # and walk straight past the rate limiter.
+    TRUST_PROXY_HEADERS: bool = False
+
     # Auth
     SECRET_KEY: str = "CHANGE_ME_IN_PROD_TO_A_SUPER_SECRET_KEY"
     ALGORITHM: str = "HS256"
