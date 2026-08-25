@@ -137,6 +137,15 @@ anything focusable; components that draw their own ring opt out with
 `outline-none` rather than stacking two indicators. Measured, both themes: no
 WCAG AA contrast failures.
 
+**Auth answers in the same time whether or not you exist.** Login returned a
+uniform error message but only ran Argon2 when it found a user, so an unknown
+address answered in ~50ms and a known one in ~300ms — a reliable oracle for
+which emails have accounts. A miss now pays for a throwaway verification.
+Attempts are budgeted per account as well as per address: the per-address
+budget is the looser of the two, because offices and carriers put many people
+behind one address, and a correct login clears the account's budget so
+mistyping costs an innocent user nothing.
+
 **Errors never leak internals.** A failed generation stores a generic message;
 the detail goes to the log. `str(exception)` can carry an API key fragment or a
 full connection string into a column the frontend renders.
@@ -158,7 +167,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend && python -m pytest       # 83 tests
+cd backend && python -m pytest       # 97 tests
 cd frontend && npm test              # 43 tests
 ```
 

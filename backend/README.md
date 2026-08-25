@@ -49,8 +49,8 @@ No route has a trailing slash.
 
 | Method | Path | |
 |---|---|---|
-| POST | `/api/v1/auth/register` | always creates a FOUNDER; a client-supplied role is ignored |
-| POST | `/api/v1/auth/login` | form-encoded; `username` is the email |
+| POST | `/api/v1/auth/register` | always creates a FOUNDER; a client-supplied role is ignored. Throttled per address |
+| POST | `/api/v1/auth/login` | form-encoded; `username` is the email. Throttled per account and per address |
 | GET | `/api/v1/users/me` | |
 
 ### Startups

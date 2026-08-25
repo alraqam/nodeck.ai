@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.api import deps
-from app.core.ratelimit import SlidingWindowLimiter
+from app.core.ratelimit import SlidingWindowLimiter, client_key
 from app.models.report import Report, ReportStatus, ReportType
 from app.core.config import settings
 from app.models.startup import Startup
@@ -36,20 +36,6 @@ router = APIRouter()
 # Generous for a human opening a link they were sent, tight enough that
 # nobody scans this route for free. Applied per client address.
 _limiter = SlidingWindowLimiter(limit=60, window_seconds=60.0)
-
-
-def _client_key(request: Request) -> str:
-    """Identify the caller for rate limiting.
-
-    X-Forwarded-For is trusted only when a proxy is expected to set it. It
-    is client-controlled, so behind no proxy it would let anyone mint a
-    fresh identity per request and bypass the limit entirely.
-    """
-    if settings.TRUST_PROXY_HEADERS:
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
 
 
 def _pick(source: Optional[dict], *fields: str) -> dict:
@@ -128,7 +114,7 @@ async def read_shared_profile(
     # Search engines must not index a link the founder shared with one investor.
     response.headers["X-Robots-Tag"] = "noindex, nofollow"
 
-    key = _client_key(request)
+    key = client_key(request, settings.TRUST_PROXY_HEADERS)
     if not _limiter.allow(key):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

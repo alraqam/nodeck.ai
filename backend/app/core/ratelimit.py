@@ -61,6 +61,11 @@ class SlidingWindowLimiter:
         for key in [k for k, v in self._hits.items() if not v or v[-1] < cutoff]:
             del self._hits[key]
 
+    def reset(self, key: str) -> None:
+        """Forget a key's history, e.g. after a successful login."""
+        with self._lock:
+            self._hits.pop(key, None)
+
     def retry_after(self, key: str) -> int:
         """Whole seconds until the oldest hit falls out of the window."""
         with self._lock:
@@ -68,3 +73,18 @@ class SlidingWindowLimiter:
             if not hits:
                 return 0
             return max(1, int(self.window - (time.monotonic() - hits[0])) + 1)
+
+
+def client_key(request, trust_proxy_headers: bool) -> str:
+    """Identify the caller for rate limiting.
+
+    X-Forwarded-For is honoured only where a proxy is expected to set it. The
+    header is client-controlled, so trusting it on a directly-reachable API
+    would let anyone mint a fresh identity per request and bypass every limit
+    here.
+    """
+    if trust_proxy_headers:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"

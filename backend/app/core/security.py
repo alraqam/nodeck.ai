@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
@@ -30,6 +31,24 @@ def decode_access_token(token: str) -> dict:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+# A real Argon2 hash of a value nobody holds, used to spend the same time
+# verifying a password for an account that does not exist as for one that
+# does. Built once at import: doing it lazily would leave the very first
+# miss fast, which is all an attacker needs.
+_DUMMY_HASH = pwd_context.hash(secrets.token_urlsafe(32))
+
+
+def waste_password_time() -> None:
+    """Burn a verification against a throwaway hash.
+
+    Without this, login returns in ~50ms for an unknown address and ~300ms
+    for a known one, because Argon2 only runs when a user was found. That
+    gap is trivially measurable and turns a uniform error message into a
+    reliable "does this account exist" oracle.
+    """
+    pwd_context.verify("not-the-password", _DUMMY_HASH)
 
 
 def get_password_hash(password: str) -> str:
