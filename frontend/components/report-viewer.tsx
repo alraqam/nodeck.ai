@@ -108,8 +108,18 @@ export function ReportViewer({ report }: { report: Report }) {
                                 /100
                             </span>
                         </div>
-                        <div className="mt-4">
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
                             <Badge variant={v.tier}>{v.label}</Badge>
+                            {content.confidence && (
+                                // Confidence is about the evidence, not the verdict:
+                                // a thin profile scored low is still a confident low.
+                                <Badge
+                                    variant={content.confidence === "LOW" ? "low" : "outline"}
+                                    title="How much of your profile was actually evidenced"
+                                >
+                                    {content.confidence} evidence
+                                </Badge>
+                            )}
                         </div>
                         <p className="mt-4 max-w-xs text-xs leading-relaxed text-muted-foreground">
                             Scored by a general partner who assumes you will fail. 30 is the
@@ -160,6 +170,22 @@ export function ReportViewer({ report }: { report: Report }) {
                     )}
                 </CardContent>
             </Card>
+
+            {!!content.top_fixes?.length && (
+                <Card>
+                    <CardContent className="space-y-3 p-6">
+                        <span className="eyebrow">What would move this most</span>
+                        <ol className="space-y-2.5">
+                            {content.top_fixes.map((fix, i) => (
+                                <li key={i} className="flex gap-3 text-[0.9375rem] leading-relaxed">
+                                    <span className="font-mono text-sm text-primary">{i + 1}</span>
+                                    <span>{fix}</span>
+                                </li>
+                            ))}
+                        </ol>
+                    </CardContent>
+                </Card>
+            )}
 
             {content.summary && (
                 <Card>

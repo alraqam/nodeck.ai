@@ -5,14 +5,34 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Logo, LogoMark } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { clearToken } from "@/lib/api"
+import { useEffect, useState } from "react"
+import { api, clearToken } from "@/lib/api"
 import { cn } from "@/lib/utils"
-import { LayoutGrid, LogOut, Plus } from "lucide-react"
+import { Layers, LayoutGrid, LogOut, Plus } from "lucide-react"
 
 const links = [
     { href: "/dashboard", label: "Overview", icon: LayoutGrid, exact: true },
     { href: "/dashboard/startups/new", label: "New profile", icon: Plus, exact: false },
 ]
+
+const SCREENER_LINK = {
+    href: "/dashboard/cohorts",
+    label: "Cohorts",
+    icon: Layers,
+    exact: false,
+}
+
+/** Cohorts are only shown to accounts that can use them. The server enforces
+ *  this with a 403; hiding the link just avoids offering a dead end. */
+function useVisibleLinks() {
+    const [screener, setScreener] = useState(false)
+    useEffect(() => {
+        api.me()
+            .then((u) => setScreener(u.role === "ACCELERATOR" || u.role === "ADMIN"))
+            .catch(() => setScreener(false))
+    }, [])
+    return screener ? [...links, SCREENER_LINK] : links
+}
 
 function useNav() {
     const pathname = usePathname()
@@ -36,6 +56,7 @@ function useNav() {
  */
 export function Sidebar() {
     const { isActive, logout } = useNav()
+    const visible = useVisibleLinks()
 
     return (
         <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r bg-card/40 md:flex print:hidden">
@@ -47,7 +68,7 @@ export function Sidebar() {
             </div>
 
             <nav className="flex flex-1 flex-col gap-0.5 p-2">
-                {links.map((link) => {
+                {visible.map((link) => {
                     const Icon = link.icon
                     const active = isActive(link.href, link.exact)
                     return (
@@ -89,6 +110,7 @@ export function Sidebar() {
  */
 export function MobileNav() {
     const { isActive, logout } = useNav()
+    const visible = useVisibleLinks()
 
     return (
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur md:hidden print:hidden">
@@ -98,7 +120,7 @@ export function MobileNav() {
                 </Link>
 
                 <nav className="flex items-center gap-1">
-                    {links.map((link) => {
+                    {visible.map((link) => {
                         const Icon = link.icon
                         const active = isActive(link.href, link.exact)
                         return (

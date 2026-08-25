@@ -101,6 +101,20 @@ The public route is the only unauthenticated one. It emits a hand-written
 whitelist, never a reflected model, and answers a revoked token exactly as it
 answers one that never existed.
 
+### Cohorts (accelerator accounts only)
+
+| Method | Path | |
+|---|---|---|
+| GET POST | `/api/v1/cohorts` | own cohorts only |
+| GET DELETE | `/api/v1/cohorts/{id}` | delete removes imported startups, reports and outcomes |
+| POST | `/api/v1/cohorts/{id}/decks` | multipart, many PDFs; each reported by name |
+| GET | `/api/v1/cohorts/{id}/report` | ranked, unscored last |
+| GET | `/api/v1/cohorts/{id}/export` | CSV of scores and outcomes |
+| GET PUT | `/api/v1/startups/{id}/outcome` | upsert; one row per startup |
+
+A `FOUNDER` gets `403` on every cohort route — a ranking exposes other people's
+startups, so it is an authorisation boundary, not a UI concern.
+
 ## Ownership
 
 Every startup route resolves through `get_owned_startup()`: `404` if it does

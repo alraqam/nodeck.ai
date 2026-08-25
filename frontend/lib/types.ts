@@ -97,6 +97,11 @@ export interface FundabilityAnalysis {
   summary: string
   red_flags: string[]
   green_flags: string[]
+  /** How much of the profile was actually evidenced — not how sure the verdict
+   *  is. A thin profile can be scored low with high confidence. */
+  confidence?: "LOW" | "MEDIUM" | "HIGH"
+  /** Ranked, most score-moving first. */
+  top_fixes?: string[]
 }
 
 export type ReportType = "FUNDABILITY_SCORE" | "INVESTMENT_MEMO" | "PITCH_DECK"
@@ -189,6 +194,73 @@ export interface PublicProfile {
     summary?: string
     green_flags?: string[]
   } | null
+}
+
+export type OutcomeStatus =
+  | "UNKNOWN"
+  | "RAISING"
+  | "RAISED"
+  | "FAILED"
+  | "INACTIVE"
+
+export interface Outcome {
+  id: string
+  startup_id: string
+  status: OutcomeStatus
+  /** Null rather than 0 when unknown — 0 would assert they raised nothing. */
+  raised_amount?: number | null
+  raised_at?: string | null
+  notes?: string | null
+  updated_at?: string | null
+}
+
+export interface Cohort {
+  id: string
+  name: string
+  description?: string | null
+  created_at: string
+  startup_count: number
+  scored_count: number
+}
+
+export interface DeckImportResult {
+  filename: string
+  ok: boolean
+  startup_id?: string | null
+  startup_name?: string | null
+  report_id?: string | null
+  fields_filled: string[]
+  error?: string | null
+}
+
+export interface DeckImportResponse {
+  cohort_id: string
+  imported: number
+  failed: number
+  results: DeckImportResult[]
+}
+
+export interface CohortRow {
+  startup_id: string
+  name: string
+  one_liner?: string | null
+  stage?: string | null
+  industry: string[]
+  /** PENDING while queued, FAILED carries `error`, NOT_QUEUED if never run. */
+  status: string
+  total_score?: number | null
+  breakdown?: ScoreBreakdown | null
+  confidence?: string | null
+  top_fixes: string[]
+  error?: string | null
+  outcome_status?: OutcomeStatus | null
+  raised_amount?: number | null
+}
+
+export interface CohortReport {
+  cohort: Cohort
+  rows: CohortRow[]
+  distribution: Record<string, number>
 }
 
 export interface DeckUploadResult {

@@ -1,7 +1,12 @@
 import type {
+  Cohort,
+  CohortReport,
+  DeckImportResponse,
   DeckUploadResult,
   FundabilityAnalysis,
   InvestorView,
+  Outcome,
+  OutcomeStatus,
   PublicProfile,
   Report,
   SIP,
@@ -163,6 +168,50 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  listCohorts: () => request<Cohort[]>("/cohorts"),
+
+  createCohort: (body: { name: string; description?: string }) =>
+    request<Cohort>("/cohorts", { method: "POST", body: JSON.stringify(body) }),
+
+  getCohort: (id: string) => request<Cohort>(`/cohorts/${id}`),
+
+  deleteCohort: (id: string) =>
+    request<void>(`/cohorts/${id}`, { method: "DELETE" }),
+
+  getCohortReport: (id: string) => request<CohortReport>(`/cohorts/${id}/report`),
+
+  /** Multipart, so `form: true` leaves the browser to set the boundary. */
+  importDecks: (id: string, files: File[]) => {
+    const body = new FormData()
+    for (const file of files) body.append("files", file)
+    return request<DeckImportResponse>(
+      `/cohorts/${id}/decks`,
+      { method: "POST", body },
+      { form: true },
+    )
+  },
+
+  /** Not fetched as JSON: the CSV is downloaded, so the URL is handed to the
+   *  browser with the token attached by the caller. */
+  cohortExportPath: (id: string) => `/cohorts/${id}/export`,
+
+  getOutcome: (startupId: string) =>
+    request<Outcome | null>(`/startups/${startupId}/outcome`),
+
+  saveOutcome: (
+    startupId: string,
+    body: {
+      status: OutcomeStatus
+      raised_amount?: number | null
+      raised_at?: string | null
+      notes?: string | null
+    },
+  ) =>
+    request<Outcome>(`/startups/${startupId}/outcome`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+
   getShare: (id: string) => request<ShareSettings>(`/startups/${id}/share`),
 
   /** Also rotates: calling it again mints a new token and kills the old link. */
@@ -206,6 +255,8 @@ export const api = {
 export type {
   FundabilityAnalysis,
   InvestorView,
+  Outcome,
+  OutcomeStatus,
   PublicProfile,
   Report,
   Startup,

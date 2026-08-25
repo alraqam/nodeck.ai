@@ -26,6 +26,8 @@ specific investor's thesis.
 | **Pitch deck** | 10–12 slides with speaker notes, built from the profile. Nothing is invented — a gap stays visible. |
 | **Investor views** | The profile retold for one investor's thesis. Emphasis changes; facts never do. |
 | **Deck import** | Upload an existing PDF deck and it fills in the blanks of your profile. |
+| **Cohort screening** | An accelerator drops in a whole intake of decks and gets one ranked report, scored on the same rubric as everyone else. |
+| **Outcome tracking** | Whether each scored startup went on to raise, and how much — exportable as CSV. |
 | **Share links** | A read-only public URL for an investor. Off by default, revocable, server-rendered so it unfurls properly in chat and email, and it never carries your red flags. |
 
 ## Stack
@@ -157,6 +159,13 @@ budget is the looser of the two, because offices and carriers put many people
 behind one address, and a correct login clears the account's budget so
 mistyping costs an innocent user nothing.
 
+**Scoring does not depend on who is paying.** A cohort is scored through the
+same path as a self-serve founder — there is no softer accelerator rubric. The
+score is judged against the startup's stage, so a pre-seed company is not
+marked down for lacking Series A traction, and every report carries a
+confidence band about the *evidence* rather than the verdict: a score read off
+two sentences should not look as authoritative as one read off a full profile.
+
 **A half-filled profile survives a closed tab.** The Intelligence Profile is
 a long document filled in over several sittings, and losing it to a stray
 click was a real risk. Edits are kept in the browser as you type and offered
@@ -189,7 +198,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 ## Tests
 
 ```bash
-cd backend && python -m pytest       # 118 tests
+cd backend && python -m pytest       # 148 tests
 cd frontend && npm test              # 53 tests
 ```
 
