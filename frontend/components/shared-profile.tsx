@@ -51,6 +51,9 @@ function safeUrl(value?: string | null): string | null {
 export function SharedProfileShell({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-screen">
+            <a href="#main" className="skip-link">
+                Skip to content
+            </a>
             <header className="flex h-14 items-center justify-between border-b px-6">
                 <Logo />
                 <div className="flex items-center gap-3">
@@ -60,7 +63,9 @@ export function SharedProfileShell({ children }: { children: React.ReactNode }) 
                     <ThemeToggle className="text-muted-foreground" />
                 </div>
             </header>
-            <main className="mx-auto max-w-5xl px-6">{children}</main>
+            <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-6">
+                {children}
+            </main>
             <footer className="mx-auto max-w-5xl border-t px-6 py-8">
                 <p className="text-xs leading-relaxed text-muted-foreground">
                     Shared with NoDeck. This page shows only what its owner chose to publish.
@@ -286,7 +291,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     return (
         <Card>
             <CardContent className="space-y-3 p-5">
-                <span className="eyebrow">{title}</span>
+                <h2 className="eyebrow">{title}</h2>
                 {children}
             </CardContent>
         </Card>

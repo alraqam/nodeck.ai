@@ -130,6 +130,13 @@ pitching. The link is a 128-bit token rather than the readable slug, sharing is
 off until switched on, and revoking discards the token so the URL genuinely
 stops working.
 
+**Keyboard users get a floor, not an afterthought.** Only the shadcn
+primitives carried focus styling, so every link and hand-rolled button was
+invisible to keyboard navigation. A single `:focus-visible` rule now covers
+anything focusable; components that draw their own ring opt out with
+`outline-none` rather than stacking two indicators. Measured, both themes: no
+WCAG AA contrast failures.
+
 **Errors never leak internals.** A failed generation stores a generic message;
 the detail goes to the log. `str(exception)` can carry an API key fragment or a
 full connection string into a column the frontend renders.
@@ -152,7 +159,7 @@ design/      Specification: API, schema, SIP model, prompts, architecture
 
 ```bash
 cd backend && python -m pytest       # 83 tests
-cd frontend && npm test              # 28 tests
+cd frontend && npm test              # 43 tests
 ```
 
 Neither suite needs an API key. The backend creates its own `nodeck_test`

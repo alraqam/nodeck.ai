@@ -143,7 +143,7 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
     return (
         <Card>
             <CardContent className="space-y-3 p-5">
-                <span className="eyebrow">{title}</span>
+                <h3 className="eyebrow">{title}</h3>
                 {children}
             </CardContent>
         </Card>

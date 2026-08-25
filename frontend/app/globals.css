@@ -255,3 +255,41 @@
     content: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Focus.
+
+   Only the shadcn primitives carried focus styling, so every link and every
+   hand-rolled button - the sidebar nav, the logo, dashboard cards, the stage
+   selector, the investor-view toggle - was invisible to a keyboard user
+   (WCAG 2.4.7). This is the floor for anything focusable.
+
+   Components that draw their own ring set `outline-none`, which opts them out
+   of this rule rather than stacking two indicators.
+--------------------------------------------------------------------------- */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+
+  /* Reaching the content past a long sidebar should take one key, not twenty
+     (WCAG 2.4.1). Hidden until focused, then pinned over the page. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    left: 0.75rem;
+    top: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius);
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}

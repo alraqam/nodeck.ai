@@ -7,6 +7,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import {
+    filterAndSort,
+    StartupFilters,
+    type SortKey,
+} from "@/components/startup-filters"
 import { api, ApiError } from "@/lib/api"
 import type { StartupSummary } from "@/lib/types"
 import { toast } from "sonner"
@@ -19,6 +24,8 @@ const scoreTone = (score: number) =>
 
 export default function DashboardPage() {
     const [startups, setStartups] = useState<StartupSummary[] | null>(null)
+    const [query, setQuery] = useState("")
+    const [sort, setSort] = useState<SortKey>("recent")
 
     useEffect(() => {
         api.listStartups()
@@ -30,6 +37,8 @@ export default function DashboardPage() {
                 setStartups([])
             })
     }, [])
+
+    const visible = startups ? filterAndSort(startups, query, sort) : []
 
     return (
         <div className="space-y-8">
@@ -46,6 +55,17 @@ export default function DashboardPage() {
                     </Button>
                 </Link>
             </div>
+
+            {startups && startups.length > 1 && (
+                <StartupFilters
+                    query={query}
+                    onQueryChange={setQuery}
+                    sort={sort}
+                    onSortChange={setSort}
+                    total={startups.length}
+                    shown={visible.length}
+                />
+            )}
 
             {startups === null && (
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -84,9 +104,19 @@ export default function DashboardPage() {
                 </Card>
             )}
 
-            {startups && startups.length > 0 && (
+            {startups && startups.length > 0 && visible.length === 0 && (
+                <Card>
+                    <CardContent className="p-8 text-center">
+                        <p className="text-sm text-muted-foreground">
+                            Nothing matches &ldquo;{query}&rdquo;.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
+
+            {visible.length > 0 && (
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {startups.map((s) => (
+                    {visible.map((s) => (
                         <Link key={s.id} href={`/dashboard/startups/${s.id}`} className="group">
                             <Card className="h-full transition-colors group-hover:border-primary/50">
                                 <CardContent className="flex h-full flex-col gap-2 p-5">
